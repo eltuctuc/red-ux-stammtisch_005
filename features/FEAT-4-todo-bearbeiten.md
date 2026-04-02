@@ -336,3 +336,51 @@ Keine neuen Packages.
 
 ### Offene Punkte / Tech-Debt
 - Keine
+
+---
+
+## 5. QA Ergebnisse
+*Ausgefüllt von: /red:proto-qa — 2026-04-03*
+
+### Acceptance Criteria Status
+- [x] AC-1: Doppelklick öffnet Edit-Modus für genau dieses Todo ✅
+- [x] AC-2: Bestehender Titel vorausgefüllt + vollständig selektiert ✅
+- [x] AC-3: Enter bestätigt, neuer Titel gespeichert, Modus beendet ✅
+- [x] AC-4: Escape bricht ab, Original wiederhergestellt ✅
+- [x] AC-5: Blur bestätigt analog zu Enter ✅
+- [x] AC-6: Leerer/nur-Leerzeichen-Titel → kein Speichern, Escape-Verhalten ✅
+- [x] AC-7: Geänderter Titel sofort in localStorage persistiert ✅
+- [x] AC-8: Doppelklick anderes Todo → erstes via Blur bestätigt, zweites öffnet ✅
+- [x] AC-9: Titel-Input respektiert 200-Zeichen-Limit ✅
+- [x] AC-10: Status-Toggle disabled während Edit-Modus ✅
+
+### Security-Check
+- Kein `dangerouslySetInnerHTML` – React rendert Titel als Text-Content, kein XSS-Risiko
+- Input-Validierung: `maxLength={200}` + `trim()` vor Speicherung
+- localStorage-Daten werden bei Laden validiert (FEAT-2, unverändert)
+
+### A11y-Check
+- `aria-label="Todo-Titel bearbeiten"` auf Input ✅
+- `disabled` auf StatusToggle während Edit (native disabled = aria-disabled für `<input>`) ✅
+- Autofocus + select-all via `useEffect` ✅
+- Fokus-Rückgabe auf `<li tabIndex={-1}>` nach Edit-Ende ✅
+- Keyboard-Einstieg in Edit-Modus fehlt ❌ → BUG-FEAT4-QA-001
+
+### Offene Bugs
+- BUG-FEAT4-QA-001 – Kein Keyboard-Einstieg in Edit-Modus (WCAG 2.1.1) (High)
+- BUG-FEAT4-QA-002 – Fehlende Reducer-Unit-Tests (Medium)
+- BUG-FEAT4-QA-004 – aria-label auf `<li>` zeigt veralteten Titel während Edit (Medium)
+- BUG-FEAT4-QA-005 – Fehlende Tests für Edge Cases (Medium)
+- BUG-FEAT4-QA-006 – Race-Condition-Test beweist Schutz nicht korrekt (Medium)
+- BUG-FEAT4-UX-002 – Schriftgröße Span→Input (14px vs. 16px) (Medium)
+- BUG-FEAT4-UX-003 – Kein SR-Feedback nach Edit-Abschluss (Medium)
+- BUG-FEAT4-QA-003 – updateTodo bei identischem Titel (Low – Tech-Debt)
+- BUG-FEAT4-QA-007 – aria-disabled fehlt auf StatusToggle (Low – Tech-Debt)
+
+### Summary
+- ✅ 10/10 Acceptance Criteria passed
+- 77/77 Tests grün
+- 0 Critical, 1 High, 6 Medium offen (zur Behebung priorisiert), 2 Low (Tech-Debt)
+
+### Production-Ready
+❌ NOT Ready – 1 High (Keyboard-Accessibility) + 6 Medium offen
