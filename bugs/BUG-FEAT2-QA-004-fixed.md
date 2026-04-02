@@ -4,7 +4,7 @@
 - **Severity:** Medium
 - **Bereich:** Functional / Performance
 - **Gefunden von:** QA Engineer
-- **Status:** Open
+- **Status:** Fixed – 2026-04-02
 
 ## Beschreibung
 
