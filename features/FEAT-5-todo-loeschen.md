@@ -1,7 +1,7 @@
 # FEAT-5: Todo löschen
 
 ## Status
-Aktueller Schritt: Dev
+Aktueller Schritt: Done
 
 ## Abhängigkeiten
 - Benötigt: FEAT-1 (Todo anlegen) – es muss Todos geben die gelöscht werden können

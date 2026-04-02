@@ -1,5 +1,20 @@
 # Release History
 
+## 2026-04-03 – v0.4.0
+### Neue Features
+- **FEAT-4 – Todo bearbeiten:** Inline-Editing per Doppelklick/Tastatur; Enter speichert, Escape stellt Original wieder her.
+- **FEAT-5 – Todo löschen:** Inline-Confirm ohne Modal; ×-Button mit zweistufiger Bestätigung, vollständiges Fokus-Management.
+
+### Bug Fixes
+- **BUG-FEAT4-QA-001:** Keyboard-Einstieg in Edit-Modus (Enter/F2) *(Severity: High)*
+- **BUG-FEAT4-UX-002:** Schriftgröße Span→Input konsistent (text-sm) *(Severity: Medium)*
+- **BUG-FEAT4-UX-003:** SR-Feedback nach Edit-Abschluss via aria-live *(Severity: Medium)*
+- **BUG-FEAT5-QA-001:** Tests für Enter/Space auf ×-Button *(Severity: Medium)*
+- **BUG-FEAT5-QA-002:** Fokus-Tests nach Cancel *(Severity: Medium)*
+- **BUG-FEAT5-QA-003:** Fokus-Tests nach Löschen *(Severity: Medium)*
+- **BUG-FEAT5-UX-001:** StatusToggle-Platzhalter in S-01c *(Severity: Medium)*
+- **BUG-FEAT5-UX-002:** aria-hidden von "Löschen?"-Text entfernt *(Severity: Medium)*
+
 ## 2026-04-03 – v0.3.0
 ### Neue Features
 - **FEAT-3 – Todo-Status (erledigt / offen):** Todos können per Klick oder Tastatur als erledigt markiert und zurückgesetzt werden; Status wird persistent gespeichert.

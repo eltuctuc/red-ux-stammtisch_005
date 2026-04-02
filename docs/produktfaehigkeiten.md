@@ -8,3 +8,9 @@ Die App zeigt alle Todos in einer geordneten Liste an – neueste zuerst. Todos 
 
 ## Todo anlegen *(FEAT-1, seit 2026-04-02)*
 Nutzer können neue Todos über ein Eingabefeld oben in der App erstellen. Ein Todo wird durch Drücken von Enter oder Klicken des "+"-Buttons hinzugefügt. Leere oder nur aus Leerzeichen bestehende Eingaben werden ignoriert. Das Eingabefeld ist beim App-Start automatisch fokussiert.
+
+## Todo bearbeiten *(FEAT-4, seit 2026-04-03)*
+Nutzer können den Titel eines bestehenden Todos direkt in der Liste bearbeiten – per Doppelklick oder Tastatur (Enter/F2 auf dem Titel). Das Eingabefeld erscheint sofort an der gleichen Position, der bestehende Titel ist vorausgefüllt und vollständig markiert. Enter oder Fokus-Verlust speichert die Änderung, Escape stellt den Original-Titel wieder her. Leere Eingaben werden als Abbruch behandelt.
+
+## Todo löschen *(FEAT-5, seit 2026-04-03)*
+Nutzer können Todos dauerhaft aus der Liste entfernen. Jedes Todo zeigt bei Hover einen ×-Button, der eine Inline-Bestätigung direkt am Todo-Item öffnet – kein Modal-Dialog. Erst nach explizitem Klick auf "Löschen" wird das Todo entfernt; Escape oder Klick außerhalb bricht ab. Der Fokus kehrt nach dem Abbrechen automatisch zum ×-Button zurück. Nach dem Löschen des letzten Todos erscheint der Leerzustand.
