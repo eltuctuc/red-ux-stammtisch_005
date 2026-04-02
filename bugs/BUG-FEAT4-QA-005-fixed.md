@@ -4,7 +4,7 @@
 - **Severity:** Medium
 - **Bereich:** Functional (Test-Coverage)
 - **Gefunden von:** QA Engineer
-- **Status:** Open
+- **Status:** Fixed
 
 ## Beschreibung
 

@@ -1,9 +1,42 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../App'
 import { StatusToggle } from './StatusToggle'
+import { editReducer } from './TodoListArea'
 import type { Todo } from '../types'
+
+// ── editReducer Unit Tests (QA-002) ──────────────────────────────────────────
+
+describe('editReducer – Unit Tests', () => {
+  const idle = { editingId: null, originalValue: '' }
+  const editing = { editingId: 'abc', originalValue: 'Alter Titel' }
+
+  it('idle + EDIT_START → editing mit korrekten Werten', () => {
+    const next = editReducer(idle, { type: 'EDIT_START', id: 'abc', title: 'Alter Titel' })
+    expect(next).toEqual({ editingId: 'abc', originalValue: 'Alter Titel' })
+  })
+
+  it('editing + EDIT_SAVE → idle', () => {
+    const next = editReducer(editing, { type: 'EDIT_SAVE' })
+    expect(next).toEqual({ editingId: null, originalValue: '' })
+  })
+
+  it('editing + EDIT_CANCEL → idle', () => {
+    const next = editReducer(editing, { type: 'EDIT_CANCEL' })
+    expect(next).toEqual({ editingId: null, originalValue: '' })
+  })
+
+  it('idle + EDIT_SAVE → idle (no-op – Race-Condition-Schutz)', () => {
+    const next = editReducer(idle, { type: 'EDIT_SAVE' })
+    expect(next).toBe(idle) // referenzidentisch: kein neues Objekt
+  })
+
+  it('idle + EDIT_CANCEL → idle (no-op)', () => {
+    const next = editReducer(idle, { type: 'EDIT_CANCEL' })
+    expect(next).toBe(idle)
+  })
+})
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {}
@@ -407,6 +440,144 @@ describe('FEAT-4 – Todo bearbeiten (Inline-Editing)', () => {
     await waitFor(() => {
       const listItem = screen.getByRole('listitem')
       expect(document.activeElement).toBe(listItem)
+    })
+  })
+
+  // ── QA-005: Fehlende Edge-Case-Tests ────────────────────────────────────────
+
+  it('Nur-Leerzeichen + Blur → Original-Titel bleibt (Integration)', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Darf nicht weg via Blur' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Darf nicht weg via Blur'))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    await user.clear(input)
+    await user.type(input, '   ')
+    fireEvent.blur(input)
+    await waitFor(() => {
+      expect(screen.getByText('Darf nicht weg via Blur')).toBeInTheDocument()
+    })
+  })
+
+  it('Doppelklick auf erledigtes Todo öffnet Edit-Modus', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Erledigtes Todo', status: 'done' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Erledigtes Todo'))
+    expect(screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })).toBeInTheDocument()
+  })
+
+  it('200-Zeichen-Titel wird korrekt in Edit-Input geladen', async () => {
+    const user = userEvent.setup()
+    const longTitle = 'a'.repeat(199)
+    const todo = makeTodo({ title: longTitle })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText(longTitle))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    expect(input).toHaveValue(longTitle)
+    expect(input).toHaveAttribute('maxlength', '200')
+  })
+
+  it('Doppelklick + sofortiges Escape → Original-Titel bleibt, kein Zwischenzustand', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Schnell Escape' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Schnell Escape'))
+    await user.keyboard('[Escape]')
+    expect(screen.queryByRole('textbox', { name: /todo-titel bearbeiten/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Schnell Escape')).toBeInTheDocument()
+  })
+
+  // ── QA-006: Echter Race-Condition-Test (Enter + expliziter Blur) ────────────
+
+  it('Race Condition: Enter + expliziter Blur → updateTodo nur einmal aufgerufen', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Race Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Race Test'))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    await user.clear(input)
+    await user.type(input, 'Einmalig')
+    // Enter auslösen → State wechselt zu idle
+    fireEvent.keyDown(input, { key: 'Enter' })
+    // Sofort Blur auslösen → handleSave prüft editStateRef, sieht idle → no-op
+    fireEvent.blur(input)
+    await waitFor(() => {
+      const stored = JSON.parse(localStorageMock.getItem('todos') ?? '[]') as Todo[]
+      expect(stored[0].title).toBe('Einmalig')
+    })
+    // Input ist weg (nicht durch Doppel-Save wieder geöffnet)
+    expect(screen.queryByRole('textbox', { name: /todo-titel bearbeiten/i })).not.toBeInTheDocument()
+    // Titel korrekt – nur einmalig gespeichert
+    expect(screen.getByText('Einmalig')).toBeInTheDocument()
+  })
+
+  // ── QA-001: Keyboard-Einstieg in Edit-Modus ────────────────────────────────
+
+  it('Enter auf fokussiertem Titel-Span öffnet Edit-Modus', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Keyboard Edit' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const titleBtn = screen.getByRole('button', { name: 'Keyboard Edit' })
+    titleBtn.focus()
+    await user.keyboard('[Enter]')
+    expect(screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })).toBeInTheDocument()
+  })
+
+  it('F2 auf fokussiertem Titel-Span öffnet Edit-Modus', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'F2 Edit' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const titleBtn = screen.getByRole('button', { name: 'F2 Edit' })
+    titleBtn.focus()
+    await user.keyboard('{F2}')
+    expect(screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })).toBeInTheDocument()
+  })
+
+  // ── QA-004: aria-label auf <li> während Edit ───────────────────────────────
+
+  it('aria-label auf <li> zeigt "Todo wird bearbeitet" während Edit-Modus', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Label Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Label Test'))
+    expect(screen.getByRole('listitem', { name: /todo wird bearbeitet/i })).toBeInTheDocument()
+  })
+
+  // ── UX-003: SR-Feedback nach Edit-Abschluss ────────────────────────────────
+
+  it('SR-Status-Region zeigt "gespeichert" nach erfolgreichem Save', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'SR Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('SR Test'))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    await user.clear(input)
+    await user.type(input, 'Neuer SR Titel')
+    await user.keyboard('[Enter]')
+    await waitFor(() => {
+      expect(screen.getByText(/neuer sr titel gespeichert/i)).toBeInTheDocument()
+    })
+  })
+
+  it('SR-Status-Region zeigt "abgebrochen" nach Escape', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Cancel SR Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Cancel SR Test'))
+    await user.keyboard('[Escape]')
+    await waitFor(() => {
+      expect(screen.getByText(/bearbeitung abgebrochen/i)).toBeInTheDocument()
     })
   })
 })

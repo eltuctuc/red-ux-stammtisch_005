@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import type { KeyboardEvent } from 'react'
 import type { Todo } from '../types'
 import { StatusToggle } from './StatusToggle'
 import { TodoEditInput } from './TodoEditInput'
@@ -30,7 +31,7 @@ export function TodoItem({ todo, onToggle, isEditing, onDoubleClick, onSave, onC
     <li
       ref={liRef}
       className={`todo-item${isDone ? ' todo-item--done' : ''}${isEditing ? ' todo-item--editing' : ''}`}
-      aria-label={isDone ? `${todo.title} (erledigt)` : todo.title}
+      aria-label={isEditing ? 'Todo wird bearbeitet' : (isDone ? `${todo.title} (erledigt)` : todo.title)}
       tabIndex={-1}
     >
       <StatusToggle
@@ -51,6 +52,14 @@ export function TodoItem({ todo, onToggle, isEditing, onDoubleClick, onSave, onC
         <span
           className="todo-item__title"
           onDoubleClick={onDoubleClick}
+          onKeyDown={(e: KeyboardEvent<HTMLSpanElement>) => {
+            if (e.key === 'Enter' || e.key === 'F2') {
+              e.preventDefault()
+              onDoubleClick()
+            }
+          }}
+          tabIndex={0}
+          role="button"
         >
           {todo.title}
         </span>

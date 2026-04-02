@@ -1,9 +1,11 @@
 .todo-edit-input {
   flex: 1;
-  height: 32px; /* Input sm */
-  padding: var(--spacing-2) var(--spacing-3);
+  height: 32px; /* Inline-Edit: gleiche Höhe wie Titel-Span-Zeile */
+  /* text-base (16px) statt DS-konformem text-sm (14px) – Inline-Edit ersetzt den 16px-Span,
+     Schriftgröße muss übereinstimmen um Layout-Shift beim Übergang zu verhindern (UX-002 Fix) */
+  padding: var(--spacing-1) var(--spacing-3);
   font-family: var(--font-family-base);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--color-text-primary);
   background-color: var(--color-neutral-0);
   border: 1px solid var(--color-border-default);
@@ -16,5 +18,5 @@
 .todo-edit-input:focus {
   border-width: 2px;
   border-color: var(--color-border-focus);
-  padding: calc(var(--spacing-2) - 1px) calc(var(--spacing-3) - 1px); /* Kompensiert 1px→2px Border ohne Layout-Shift */
+  padding: calc(var(--spacing-1) - 1px) calc(var(--spacing-3) - 1px); /* Kompensiert 1px→2px Border ohne Layout-Shift */
 }

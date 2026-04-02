@@ -6,14 +6,14 @@ import './TodoListArea.css'
 
 // ── Editing State Machine ────────────────────────────────────────────────────
 
-type EditState = { editingId: string | null; originalValue: string }
+export type EditState = { editingId: string | null; originalValue: string }
 
-type EditAction =
+export type EditAction =
   | { type: 'EDIT_START'; id: string; title: string }
   | { type: 'EDIT_SAVE' }
   | { type: 'EDIT_CANCEL' }
 
-function editReducer(state: EditState, action: EditAction): EditState {
+export function editReducer(state: EditState, action: EditAction): EditState {
   switch (action.type) {
     case 'EDIT_START':
       return { editingId: action.id, originalValue: action.title }
@@ -45,6 +45,7 @@ export function TodoListArea({ todos, onToggle, onUpdate }: TodoListAreaProps) {
   }, [])
 
   const [editState, dispatch] = useReducer(editReducer, { editingId: null, originalValue: '' })
+  const [srStatus, setSrStatus] = useState('')
 
   // Ref für race-condition-sichere State-Abfrage in Callbacks
   const editStateRef = useRef(editState)
@@ -59,10 +60,12 @@ export function TodoListArea({ todos, onToggle, onUpdate }: TodoListAreaProps) {
     if (editingId === null) return // no-op: blur feuert nach Enter, State bereits idle
     onUpdate(editingId, newTitle)
     dispatch({ type: 'EDIT_SAVE' })
+    setSrStatus(`${newTitle} gespeichert`)
   }, [onUpdate])
 
   const handleCancel = useCallback(() => {
     dispatch({ type: 'EDIT_CANCEL' })
+    setSrStatus('Bearbeitung abgebrochen')
   }, [])
 
   if (todos.length === 0) {
@@ -70,6 +73,8 @@ export function TodoListArea({ todos, onToggle, onUpdate }: TodoListAreaProps) {
   }
 
   return (
+    <>
+    <div className="sr-only" aria-live="polite" aria-atomic="true">{srStatus}</div>
     <ul
       className="todo-list"
       aria-label="Todo-Liste"
@@ -88,5 +93,6 @@ export function TodoListArea({ todos, onToggle, onUpdate }: TodoListAreaProps) {
         />
       ))}
     </ul>
+    </>
   )
 }
