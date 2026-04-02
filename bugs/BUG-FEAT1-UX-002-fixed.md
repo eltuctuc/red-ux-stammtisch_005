@@ -4,7 +4,7 @@
 - **Severity:** Medium
 - **Bereich:** Konsistenz / Design System Compliance
 - **Gefunden von:** UX Reviewer
-- **Status:** Open
+- **Status:** Fixed – 2026-04-02 – `font-size: 1.25rem` durch `var(--text-sm)` in TodoInputArea.css ersetzt
 
 ## Problem
 

@@ -4,7 +4,7 @@
 - **Severity:** Medium
 - **Bereich:** Konsistenz / Design System Compliance
 - **Gefunden von:** UX Reviewer
-- **Status:** Open
+- **Status:** Fixed – 2026-04-02 – `box-shadow: var(--shadow-input-focus)` aus `.todo-input:focus` in TodoInputArea.css entfernt
 
 ## Problem
 

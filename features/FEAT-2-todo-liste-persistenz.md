@@ -1,7 +1,7 @@
 # FEAT-2: Todo-Liste & Persistenz
 
 ## Status
-Aktueller Schritt: Tech
+Aktueller Schritt: Dev
 
 ## Abhängigkeiten
 - Benötigt: FEAT-1 (Todo anlegen) – ohne Anlegen gibt es nichts anzuzeigen
@@ -319,3 +319,29 @@ Keine neuen Packages. React (bereits vorhanden) mit `useState` + `useEffect` + `
 ### State-Komplexität
 
 Geprüft – kein State Machine erforderlich. `useTodos`-Hook verwaltet ein flaches Array. Keine verschachtelten State-Transitionen, keine async-Operationen, keine Race Conditions.
+
+---
+
+## 4. Implementierung
+*Ausgefüllt von: /red:proto-dev — 2026-04-02*
+
+### Implementierte Dateien
+- `projekt/src/hooks/useTodos.ts` – Zentraler State-Hook: localStorage laden/speichern, Validation, addTodo, sortierte Ausgabe
+- `projekt/src/components/TodoListArea.tsx` – Container: zeigt TodoList oder EmptyState, verwaltet aria-live-Initialisierung
+- `projekt/src/components/TodoListArea.css` – Styles für ul.todo-list (Border, Radius, Overflow)
+- `projekt/src/components/TodoItem.tsx` – Einzelnes Todo-Item mit Status-Toggle-Platzhalter und Trailing-Aktionen-Platzhalter
+- `projekt/src/components/TodoItem.css` – Item-Styles: Trenner, open/done-Unterscheidung (line-through + color-text-secondary), Hover-Reveal
+- `projekt/src/components/EmptyState.tsx` – Leerzustand-Komponente mit SVG-Icon
+- `projekt/src/components/EmptyState.css` – Styles für Empty State
+- `projekt/src/hooks/useTodos.test.ts` – Unit-Tests für loadTodosFromStorage (8 Tests)
+- `projekt/src/components/TodoListArea.test.tsx` – Integrationstests für TodoListArea + App (11 Tests)
+
+### Mitgefixte Bugs (Medium)
+- BUG-FEAT1-UX-002: Button-Font auf `var(--text-sm)` korrigiert
+- BUG-FEAT1-UX-003: Box-Shadow auf Input-Focus entfernt
+- BUG-FEAT1-UX-004: Hardcodierte Farben auf DS-Tokens umgestellt, `--color-text-secondary` ergänzt
+- BUG-FEAT1-UX-006: Wirkungsloses `aria-label` auf `div` entfernt
+
+### Offene Punkte / Tech-Debt
+- `sr-only`-Utility-Klasse ist in TodoInputArea.css definiert – bei Bedarf in globale CSS-Datei auslagern
+- `--font-weight-medium` Token fehlt im DS – EmptyState nutzt Fallback `500`

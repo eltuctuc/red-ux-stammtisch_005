@@ -8,52 +8,5 @@
 main {
   max-width: 640px;
   margin: 0 auto;
-  padding: 2rem 2rem;
-}
-
-/* Empty State (S-01a) */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 4rem 1rem;
-  text-align: center;
-}
-
-.empty-state__icon {
-  font-size: 2.5rem;
-  margin: 0;
-}
-
-.empty-state__title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.empty-state__hint {
-  font-size: 0.875rem;
-  color: #4b5563;
-  margin: 0;
-}
-
-/* Todo List (minimal, FEAT-2 wird das ersetzen) */
-.todo-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.todo-item {
-  padding: 0.75rem 1rem;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.25rem;
-  font-size: 1rem;
-  color: #111827;
+  padding: var(--spacing-8) var(--spacing-8);
 }

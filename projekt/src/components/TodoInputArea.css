@@ -11,6 +11,7 @@
   --color-neutral-900: #111827;
   --color-bg-page: #f9fafb;
   --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
   --color-text-disabled: #9ca3af;
   --color-text-on-primary: #ffffff;
   --color-border-default: #e5e7eb;
@@ -84,7 +85,6 @@
 
 .todo-input:focus {
   border: 2px solid var(--color-border-focus);
-  box-shadow: var(--shadow-input-focus);
 }
 
 /* Button – DS: primary, md */
@@ -94,7 +94,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
   font-family: var(--font-family-base);
   color: var(--color-text-on-primary);

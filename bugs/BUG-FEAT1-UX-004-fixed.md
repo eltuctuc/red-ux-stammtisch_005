@@ -4,7 +4,7 @@
 - **Severity:** Medium
 - **Bereich:** Konsistenz / Design System Compliance
 - **Gefunden von:** UX Reviewer
-- **Status:** Open
+- **Status:** Fixed – 2026-04-02 – Alle hardcodierten Farbwerte in App.css durch DS-Tokens ersetzt; `--color-text-secondary` als Token ergänzt; Styles in FEAT-2-Komponenten-CSS-Dateien überführt
 
 ## Problem
 

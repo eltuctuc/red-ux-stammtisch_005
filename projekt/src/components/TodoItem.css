@@ -1,0 +1,43 @@
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  background-color: var(--color-neutral-0);
+  border-bottom: 1px solid var(--color-border-default);
+  font-family: var(--font-family-base);
+}
+
+.todo-item:last-child {
+  border-bottom: none;
+}
+
+/* Status-Toggle-Platzhalter (24px breit – FEAT-3 befüllt diesen Slot) */
+.todo-item__toggle-placeholder {
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.todo-item__title {
+  flex: 1;
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.todo-item--done .todo-item__title {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+}
+
+/* Trailing-Aktionen-Platzhalter (FEAT-4/5 befüllt diesen Slot) */
+.todo-item__actions-placeholder {
+  width: 48px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.todo-item:hover .todo-item__actions-placeholder {
+  opacity: 1;
+}
