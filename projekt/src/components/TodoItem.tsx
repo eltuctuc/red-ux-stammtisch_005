@@ -70,6 +70,16 @@ export function TodoItem({
         className="todo-item todo-item--confirming"
         tabIndex={-1}
       >
+        {/* Platzhalter: hält Layout-Geometrie konsistent mit normalem Todo-Item */}
+        <span style={{ visibility: 'hidden', flexShrink: 0 }} aria-hidden="true">
+          <StatusToggle
+            todoId={todo.id}
+            todoTitle={todo.title}
+            checked={isDone}
+            disabled
+            onToggle={() => {}}
+          />
+        </span>
         <DeleteConfirmInline
           todoTitle={todo.title}
           onConfirm={onDeleteConfirm}

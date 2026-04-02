@@ -48,7 +48,7 @@ export function DeleteConfirmInline({ todoTitle, onConfirm, onCancel }: DeleteCo
     >
       <span className="sr-only" aria-live="polite">Löschen bestätigen?</span>
       <span className="delete-confirm__title">{todoTitle}</span>
-      <span className="delete-confirm__question" aria-hidden="true">Löschen?</span>
+      <span className="delete-confirm__question">Löschen?</span>
       <button
         ref={abortRef}
         className="delete-confirm__btn delete-confirm__btn--ghost"

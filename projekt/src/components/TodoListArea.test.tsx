@@ -767,6 +767,79 @@ describe('FEAT-5 – Todo löschen (Inline-Confirm)', () => {
     expect(screen.getByText('Todo B')).toBeInTheDocument()
   })
 
+  it('Enter auf fokussiertem ×-Button öffnet Inline-Bestätigungszeile', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Keyboard Delete Trigger' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const deleteBtn = screen.getByRole('button', { name: 'Todo löschen' })
+    deleteBtn.focus()
+    await user.keyboard('[Enter]')
+    expect(screen.getByRole('group', { name: /löschen bestätigen/i })).toBeInTheDocument()
+  })
+
+  it('Space auf fokussiertem ×-Button öffnet Inline-Bestätigungszeile', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Space Delete Trigger' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const deleteBtn = screen.getByRole('button', { name: 'Todo löschen' })
+    deleteBtn.focus()
+    await user.keyboard(' ')
+    expect(screen.getByRole('group', { name: /löschen bestätigen/i })).toBeInTheDocument()
+  })
+
+  it('[Abbrechen] setzt Fokus zurück auf ×-Button', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Fokus Cancel Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await user.click(screen.getByRole('button', { name: 'Abbrechen' }))
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Todo löschen' }))
+    })
+  })
+
+  it('Escape setzt Fokus zurück auf ×-Button', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Fokus Escape Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await user.keyboard('[Escape]')
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Todo löschen' }))
+    })
+  })
+
+  it('Letztes Todo löschen → Fokus springt auf Input', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Fokus Input Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await user.click(screen.getByRole('button', { name: 'Löschen' }))
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole('textbox', { name: /neues todo/i }))
+    })
+  })
+
+  it('Todo löschen bei mehreren Todos → Fokus auf verbleibendes Todo-Item', async () => {
+    const user = userEvent.setup()
+    const todoA = makeTodo({ title: 'Fokus Next A', createdAt: '2026-04-01T10:00:00.000Z' })
+    const todoB = makeTodo({ title: 'Fokus Next B', createdAt: '2026-04-01T08:00:00.000Z' })
+    localStorageMock.setItem('todos', JSON.stringify([todoA, todoB]))
+    render(<App />)
+    const deleteButtons = screen.getAllByRole('button', { name: 'Todo löschen' })
+    await user.click(deleteButtons[0])
+    await user.click(screen.getByRole('button', { name: 'Löschen' }))
+    await waitFor(() => {
+      const remainingItem = screen.getByRole('listitem')
+      expect(document.activeElement).toBe(remainingItem)
+    })
+  })
+
   it('SR-Live-Region kündigt Bestätigungsschritt an', async () => {
     const user = userEvent.setup()
     const todo = makeTodo({ title: 'SR Announce' })
