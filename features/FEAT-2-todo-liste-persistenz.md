@@ -15,7 +15,7 @@ Aktueller Schritt: Spec
 Die App zeigt alle vorhandenen Todos in einer Liste an. Die Liste lädt beim Start aus localStorage und bleibt nach einem Browser-Refresh erhalten. Im leeren Zustand wird eine erklärende Nachricht mit Eingabefeld gezeigt, damit der Nutzer sofort starten kann.
 
 ### Definitionen
-- **Todo-Liste:** Geordnete Sammlung aller angelegten Todos, sortiert nach Erstellungszeitpunkt (älteste zuerst).
+- **Todo-Liste:** Geordnete Sammlung aller angelegten Todos, sortiert nach Erstellungszeitpunkt (neueste zuerst – oben).
 - **Persistenz:** Automatisches Speichern des aktuellen Listen-Zustands in localStorage nach jeder Änderung. Kein manuelles Speichern nötig.
 - **Leerer Zustand:** Zustand der App wenn keine Todos vorhanden sind – weder beim ersten Laden noch nach dem Löschen aller Todos.
 - **localStorage-Key:** Ein fester Key (z.B. `todos`) unter dem alle Todos als JSON gespeichert werden.
@@ -30,7 +30,7 @@ Die App zeigt alle vorhandenen Todos in einer Liste an. Die Liste lädt beim Sta
 ### Acceptance Criteria
 - [ ] Beim Start der App werden alle in localStorage gespeicherten Todos geladen und angezeigt.
 - [ ] Nach einem Browser-Refresh sind alle Todos weiterhin vorhanden und in derselben Reihenfolge.
-- [ ] Todos sind nach Erstellungszeitpunkt sortiert – älteste oben.
+- [ ] Todos sind nach Erstellungszeitpunkt sortiert – neueste oben, älteste unten.
 - [ ] Erledigte Todos sind visuell von offenen unterscheidbar (z.B. durchgestrichener Text, reduzierter Kontrast).
 - [ ] Im leeren Zustand (keine Todos vorhanden) wird eine erklärende Nachricht angezeigt (z.B. "Noch keine Todos – leg eines an").
 - [ ] Im leeren Zustand ist das Eingabefeld sichtbar und fokussiert – der Nutzer kann sofort tippen.
