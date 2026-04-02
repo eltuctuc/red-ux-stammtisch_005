@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash([ -f /Users/enricoreinsdorf/Projekte/test-projekt/project-config.md ])",
+      "Bash(gh auth:*)",
+      "Bash(mkdir -p projekt)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  },
+  "disabledMcpjsonServers": [
+    "neon",
+    "supabase",
+    "vercel",
+    "notion",
+    "figma"
+  ]
+}
