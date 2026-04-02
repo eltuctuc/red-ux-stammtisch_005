@@ -257,6 +257,160 @@ describe('TodoListArea – Status-Toggle', () => {
   })
 })
 
+describe('FEAT-4 – Todo bearbeiten (Inline-Editing)', () => {
+  it('Doppelklick auf Titel öffnet Inline-Input', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Bearbeitbarer Titel' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const titleSpan = screen.getByText('Bearbeitbarer Titel')
+    await user.dblClick(titleSpan)
+    expect(screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })).toBeInTheDocument()
+    expect(screen.queryByText('Bearbeitbarer Titel')).not.toBeInTheDocument()
+  })
+
+  it('Input enthält bestehenden Titel beim Öffnen', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Vorhandener Titel' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Vorhandener Titel'))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    expect(input).toHaveValue('Vorhandener Titel')
+  })
+
+  it('Enter speichert neuen Titel und schließt Input', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Alter Titel' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Alter Titel'))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    await user.clear(input)
+    await user.type(input, 'Neuer Titel')
+    await user.keyboard('[Enter]')
+    expect(screen.queryByRole('textbox', { name: /todo-titel bearbeiten/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Neuer Titel')).toBeInTheDocument()
+  })
+
+  it('Escape verwirft Änderung und stellt Original wieder her', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Original Titel' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Original Titel'))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    await user.clear(input)
+    await user.type(input, 'Verändert')
+    await user.keyboard('[Escape]')
+    expect(screen.queryByRole('textbox', { name: /todo-titel bearbeiten/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Original Titel')).toBeInTheDocument()
+  })
+
+  it('Leerer Titel + Enter verhält sich wie Escape', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Darf nicht weg' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Darf nicht weg'))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    await user.clear(input)
+    await user.keyboard('[Enter]')
+    expect(screen.getByText('Darf nicht weg')).toBeInTheDocument()
+  })
+
+  it('Blur speichert neuen Titel', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Blur Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Blur Test'))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    await user.clear(input)
+    await user.type(input, 'Nach Blur')
+    // Tab löst Blur aus
+    await user.tab()
+    await waitFor(() => {
+      expect(screen.getByText('Nach Blur')).toBeInTheDocument()
+    })
+  })
+
+  it('Enter dann Blur speichert nur einmal (Race Condition)', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Race Condition Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Race Condition Test'))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    await user.clear(input)
+    await user.type(input, 'Einmalig Gespeichert')
+    await user.keyboard('[Enter]')
+    // Blur feuert danach automatisch durch den State-Wechsel
+    await waitFor(() => {
+      const stored = JSON.parse(localStorageMock.getItem('todos') ?? '[]') as Todo[]
+      expect(stored[0].title).toBe('Einmalig Gespeichert')
+    })
+    // Kein zweiter Render oder doppelter State-Update
+    expect(screen.getAllByText('Einmalig Gespeichert')).toHaveLength(1)
+  })
+
+  it('Doppelklick auf Todo-A öffnet Edit, dann Doppelklick auf Todo-B speichert A und öffnet B', async () => {
+    const user = userEvent.setup()
+    const todoA = makeTodo({ title: 'Todo A', createdAt: '2026-04-01T10:00:00.000Z' })
+    const todoB = makeTodo({ title: 'Todo B', createdAt: '2026-04-01T08:00:00.000Z' })
+    localStorageMock.setItem('todos', JSON.stringify([todoA, todoB]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Todo A'))
+    const inputA = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    await user.clear(inputA)
+    await user.type(inputA, 'Todo A Geändert')
+    await user.dblClick(screen.getByText('Todo B'))
+    await waitFor(() => {
+      expect(screen.getByText('Todo A Geändert')).toBeInTheDocument()
+    })
+    expect(screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })).toHaveValue('Todo B')
+  })
+
+  it('Status-Toggle ist disabled während Edit-Modus', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Toggle Disabled Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Toggle Disabled Test'))
+    const checkbox = screen.getByRole('checkbox')
+    expect(checkbox).toBeDisabled()
+  })
+
+  it('Geänderter Titel wird in localStorage persistiert', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Persistenz Titel' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Persistenz Titel'))
+    const input = screen.getByRole('textbox', { name: /todo-titel bearbeiten/i })
+    await user.clear(input)
+    await user.type(input, 'Gespeicherter Titel')
+    await user.keyboard('[Enter]')
+    await waitFor(() => {
+      const stored = JSON.parse(localStorageMock.getItem('todos') ?? '[]') as Todo[]
+      expect(stored[0].title).toBe('Gespeicherter Titel')
+    })
+  })
+
+  it('Fokus kehrt nach Bearbeitung auf das Todo-Item zurück', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Fokus Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Fokus Test'))
+    await user.keyboard('[Escape]')
+    await waitFor(() => {
+      const listItem = screen.getByRole('listitem')
+      expect(document.activeElement).toBe(listItem)
+    })
+  })
+})
+
 describe('StatusToggle – disabled', () => {
   it('disabled Toggle löst keinen State-Wechsel aus bei Klick', async () => {
     const user = userEvent.setup()

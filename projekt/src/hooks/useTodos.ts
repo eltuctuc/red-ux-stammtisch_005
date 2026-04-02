@@ -52,9 +52,15 @@ export function useTodos() {
     )
   }, [])
 
+  const updateTodo = useCallback((id: string, newTitle: string) => {
+    setTodos((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, title: newTitle } : t))
+    )
+  }, [])
+
   const sortedTodos = [...todos].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
 
-  return { todos: sortedTodos, addTodo, toggleTodo }
+  return { todos: sortedTodos, addTodo, toggleTodo, updateTodo }
 }

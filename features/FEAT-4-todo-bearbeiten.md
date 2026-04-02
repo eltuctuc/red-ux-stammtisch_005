@@ -1,7 +1,7 @@
 # FEAT-4: Todo bearbeiten
 
 ## Status
-Aktueller Schritt: Tech
+Aktueller Schritt: Dev
 
 ## Abhängigkeiten
 - Benötigt: FEAT-1 (Todo anlegen) – es muss Todos geben die bearbeitet werden können
@@ -315,3 +315,24 @@ Keine neuen Packages.
   - `userEvent.dblClick` funktioniert nur wenn das Element im DOM fokussierbar/klickbar ist – `pointer-events: none` durch happy-dom nicht erkannt, eher über DOM-Events testen.
   - `useEffect` für `focus/select` ist async – `await waitFor(() => expect(document.activeElement).toBe(inputEl))` verwenden.
   - Reducer-Unit-Tests können direkt gegen die Reducer-Funktion laufen ohne React-Kontext – schnell und deterministisch.
+
+---
+
+## 4. Implementierung
+*Ausgefüllt von: /red:proto-dev — 2026-04-03*
+
+### Implementierte Dateien
+- `projekt/src/hooks/useTodos.ts` – `updateTodo(id, newTitle)` hinzugefügt
+- `projekt/src/App.tsx` – `updateTodo` an `TodoListArea` als `onUpdate` weitergegeben
+- `projekt/src/components/TodoListArea.tsx` – `editReducer` (State Machine), `useReducer`-Editing-State, `handleDoubleClick/Save/Cancel`-Callbacks mit Race-Condition-Schutz via Ref
+- `projekt/src/components/TodoItem.tsx` – `isEditing`/`onDoubleClick`/`onSave`/`onCancel` Props, Fokus-Rückgabe via `useEffect` + `tabIndex={-1}`, bedingte Render-Pfade (Span vs. TodoEditInput)
+- `projekt/src/components/TodoEditInput.tsx` – Neue Komponente: Input sm, autofocus + select-all via useEffect, Enter/Escape/Blur-Handler
+- `projekt/src/components/TodoEditInput.css` – DS Input sm Styles (32px, Tokens)
+- `projekt/src/components/TodoEditInput.test.tsx` – 15 Unit/Integration-Tests
+- `projekt/src/components/TodoListArea.test.tsx` – 11 neue Integration-Tests (FEAT-4)
+
+### Installierte Dependencies
+- Keine neuen Packages.
+
+### Offene Punkte / Tech-Debt
+- Keine

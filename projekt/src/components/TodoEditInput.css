@@ -1,0 +1,20 @@
+.todo-edit-input {
+  flex: 1;
+  height: 32px; /* Input sm */
+  padding: var(--spacing-2) var(--spacing-3);
+  font-family: var(--font-family-base);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  background-color: var(--color-neutral-0);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-default);
+  outline: none;
+  box-sizing: border-box;
+  min-width: 0; /* flex-child shrink korrekt */
+}
+
+.todo-edit-input:focus {
+  border-width: 2px;
+  border-color: var(--color-border-focus);
+  padding: calc(var(--spacing-2) - 1px) calc(var(--spacing-3) - 1px); /* Kompensiert 1px→2px Border ohne Layout-Shift */
+}
