@@ -62,10 +62,17 @@
 
 .status-toggle:has(.status-toggle__input:disabled) {
   cursor: not-allowed;
-  pointer-events: none;
+  /* pointer-events: none entfernt – native disabled verhindert Interaktion,
+     pointer-events: none würde AT-Label-Auflösung in bestimmten SR-Konfigurationen stören */
 }
 
-/* Hover – dezente Verstärkung des Borders bei offenem Zustand */
+/* Hover – dezente Verstärkung bei offenem Zustand */
 .status-toggle:hover .status-toggle__input:not(:checked):not(:disabled) {
   border-color: var(--color-neutral-600);
+}
+
+/* Hover – Reversibilitäts-Affordanz für erledigten Zustand */
+.status-toggle:hover .status-toggle__input:checked:not(:disabled) {
+  background-color: var(--color-primary-600);
+  border-color: var(--color-primary-600);
 }

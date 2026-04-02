@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../App'
+import { StatusToggle } from './StatusToggle'
 import type { Todo } from '../types'
 
 const localStorageMock = (() => {
@@ -124,11 +125,12 @@ describe('TodoListArea – Todo anlegen', () => {
 })
 
 describe('TodoListArea – Erledigte Todos', () => {
-  it('zeigt erledigte Todos mit sr-only "(erledigt)" Text', () => {
+  it('erledigtes Todo hat angehakte Checkbox mit SR-Label "als offen markieren"', () => {
     const doneTodo = makeTodo({ title: 'Erledigtes Todo', status: 'done' })
     localStorageMock.setItem('todos', JSON.stringify([doneTodo]))
     render(<App />)
-    expect(screen.getAllByText(/erledigt/i).length).toBeGreaterThan(0)
+    const checkbox = screen.getByRole('checkbox', { name: /erledigtes todo als offen markieren/i })
+    expect(checkbox).toBeChecked()
   })
 
   it('erledigtes Todo-Item hat done-Klasse', () => {
@@ -227,5 +229,54 @@ describe('TodoListArea – Status-Toggle', () => {
     const itemsAfter = screen.getAllByRole('listitem')
     expect(itemsAfter[0]).toHaveTextContent('Neueres Todo')
     expect(itemsAfter[1]).toHaveTextContent('Älteres Todo')
+  })
+
+  it('SR-Label wechselt zu "als offen markieren" wenn Todo erledigt ist', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Label-Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const checkbox = screen.getByRole('checkbox', { name: /label-test als erledigt markieren/i })
+    await user.click(checkbox)
+    expect(screen.getByRole('checkbox', { name: /label-test als offen markieren/i })).toBeChecked()
+  })
+})
+
+describe('StatusToggle – disabled', () => {
+  it('disabled Toggle löst keinen State-Wechsel aus bei Klick', async () => {
+    const user = userEvent.setup()
+    const onToggle = vi.fn()
+    render(
+      <StatusToggle
+        todoId="test-id"
+        todoTitle="Gesperrtes Todo"
+        checked={false}
+        disabled={true}
+        onToggle={onToggle}
+      />
+    )
+    const checkbox = screen.getByRole('checkbox')
+    await user.click(checkbox)
+    expect(onToggle).not.toHaveBeenCalled()
+    expect(checkbox).not.toBeChecked()
+  })
+
+  it('disabled Toggle reagiert nicht auf Tastendruck', async () => {
+    const user = userEvent.setup()
+    const onToggle = vi.fn()
+    render(
+      <StatusToggle
+        todoId="test-id"
+        todoTitle="Gesperrtes Todo"
+        checked={false}
+        disabled={true}
+        onToggle={onToggle}
+      />
+    )
+    const checkbox = screen.getByRole('checkbox')
+    checkbox.focus()
+    await user.keyboard(' ')
+    await user.keyboard('{Enter}')
+    expect(onToggle).not.toHaveBeenCalled()
   })
 })

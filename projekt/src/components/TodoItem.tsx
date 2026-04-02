@@ -19,10 +19,7 @@ export function TodoItem({ todo, onToggle }: TodoItemProps) {
         onToggle={onToggle}
       />
 
-      <span className="todo-item__title">
-        {todo.title}
-        {isDone && <span className="sr-only"> (erledigt)</span>}
-      </span>
+      <span className="todo-item__title">{todo.title}</span>
 
       {/* Trailing-Aktionen-Platzhalter – FEAT-4/5 */}
       <div className="todo-item__actions-placeholder" aria-hidden="true" />

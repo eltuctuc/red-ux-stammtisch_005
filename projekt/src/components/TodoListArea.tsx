@@ -26,6 +26,7 @@ export function TodoListArea({ todos, onToggle }: TodoListAreaProps) {
       className="todo-list"
       aria-label="Todo-Liste"
       aria-live={isInitialized ? 'polite' : undefined}
+      aria-relevant={isInitialized ? 'additions' : undefined}
     >
       {todos.map((todo) => (
         <TodoItem key={todo.id} todo={todo} onToggle={onToggle} />

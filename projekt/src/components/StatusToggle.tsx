@@ -21,7 +21,7 @@ export function StatusToggle({ todoId, todoTitle, checked, disabled = false, onT
 
   return (
     <label className="status-toggle" htmlFor={inputId}>
-      <span className="sr-only">{todoTitle} als erledigt markieren</span>
+      <span className="sr-only">{todoTitle} als {checked ? 'offen' : 'erledigt'} markieren</span>
       <input
         type="checkbox"
         id={inputId}
