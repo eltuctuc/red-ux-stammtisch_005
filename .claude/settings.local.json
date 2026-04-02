@@ -22,7 +22,8 @@
       "Bash(mv bugs/BUG-FEAT1-UX-003.md bugs/BUG-FEAT1-UX-003-fixed.md)",
       "Bash(mv bugs/BUG-FEAT1-UX-004.md bugs/BUG-FEAT1-UX-004-fixed.md)",
       "Bash(mv bugs/BUG-FEAT1-UX-006.md bugs/BUG-FEAT1-UX-006-fixed.md)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm version:*)"
     ]
   },
   "disabledMcpjsonServers": [

@@ -140,6 +140,21 @@ describe('TodoListArea – Erledigte Todos', () => {
     const item = screen.getByRole('listitem')
     expect(item).toHaveClass('todo-item--done')
   })
+
+  it('erledigtes Todo-Item hat aria-label mit "(erledigt)" für SR-Listing-Navigation', () => {
+    const doneTodo = makeTodo({ title: 'Scan-Test', status: 'done' })
+    localStorageMock.setItem('todos', JSON.stringify([doneTodo]))
+    render(<App />)
+    expect(screen.getByRole('listitem', { name: /scan-test \(erledigt\)/i })).toBeInTheDocument()
+  })
+
+  it('offenes Todo-Item hat kein "(erledigt)" im aria-label', () => {
+    const openTodo = makeTodo({ title: 'Offenes Todo' })
+    localStorageMock.setItem('todos', JSON.stringify([openTodo]))
+    render(<App />)
+    const item = screen.getByRole('listitem')
+    expect(item).not.toHaveAccessibleName(/erledigt/i)
+  })
 })
 
 describe('TodoListArea – Status-Toggle', () => {

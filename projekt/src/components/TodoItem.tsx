@@ -11,7 +11,10 @@ export function TodoItem({ todo, onToggle }: TodoItemProps) {
   const isDone = todo.status === 'done'
 
   return (
-    <li className={`todo-item${isDone ? ' todo-item--done' : ''}`}>
+    <li
+      className={`todo-item${isDone ? ' todo-item--done' : ''}`}
+      aria-label={isDone ? `${todo.title} (erledigt)` : todo.title}
+    >
       <StatusToggle
         todoId={todo.id}
         todoTitle={todo.title}

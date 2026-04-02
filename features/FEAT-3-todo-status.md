@@ -1,7 +1,7 @@
 # FEAT-3: Todo-Status (erledigt / offen)
 
 ## Status
-Aktueller Schritt: Dev
+Aktueller Schritt: Done
 
 ## Abhängigkeiten
 - Benötigt: FEAT-1 (Todo anlegen) – es muss Todos geben die markiert werden können

@@ -1,5 +1,20 @@
 # Release History
 
+## 2026-04-03 – v0.3.0
+### Neue Features
+- **FEAT-3 – Todo-Status (erledigt / offen):** Todos können per Klick oder Tastatur als erledigt markiert und zurückgesetzt werden; Status wird persistent gespeichert.
+
+### Bug Fixes
+- **BUG-FEAT3-QA-001:** SR-Label des Status-Toggle dynamisch – zeigt jetzt korrekt "als offen/erledigt markieren" je nach aktuellem Zustand *(Severity: High)*
+- **BUG-FEAT3-UX-002:** Redundante `sr-only "(erledigt)"` Ausgabe am Titel entfernt *(Severity: High)*
+- **BUG-FEAT3-UX-005:** `aria-label` am `<li>` ergänzt – erledigter Status beim SR-Scanning erkennbar *(Severity: High)*
+- **BUG-FEAT3-QA-003:** `aria-relevant="additions"` auf Todo-Liste – Toggle-Aktionen lösen keine redundante Live-Region-Ankündigung mehr aus *(Severity: Medium)*
+- **BUG-FEAT3-QA-005:** `pointer-events: none` vom Label-Wrapper entfernt – AT-Kompatibilität verbessert *(Severity: Medium)*
+- **BUG-FEAT3-QA-002:** Test für `disabled`-Prop des Status-Toggle ergänzt *(Severity: Medium)*
+- **BUG-FEAT3-UX-003:** Hover-State für erledigten Toggle ergänzt (`color-primary-600`) *(Severity: Medium)*
+
+---
+
 ## 2026-04-02 – v0.2.0
 ### Neue Features
 - **FEAT-2 – Todo-Liste & Persistenz:** Todos werden in einer sortierten Liste angezeigt und automatisch im localStorage persistiert.
