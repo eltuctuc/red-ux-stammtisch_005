@@ -1,7 +1,7 @@
 # FEAT-1: Todo anlegen
 
 ## Status
-Aktueller Schritt: Tech
+Aktueller Schritt: Dev
 
 ## Abhängigkeiten
 - Benötigt: FEAT-2 (Todo-Liste & Persistenz) – das angelegte Todo muss gespeichert und angezeigt werden
@@ -264,3 +264,30 @@ Keine neuen Packages erforderlich. Alle benötigten APIs (`crypto.randomUUID`, `
 ### State-Komplexität
 
 Geprüft – kein State Machine erforderlich. FEAT-1 hat nur einen relevanten State: den kontrollierten Input-Wert. Fokus-Management erfolgt imperativ via ref, kein zusätzlicher State nötig.
+
+---
+
+## 4. Implementierung
+*Ausgefüllt von: /red:proto-dev — 2026-04-02*
+
+### Implementierte Dateien
+- `projekt/src/types.ts` – Todo-Interface (id, title, createdAt, status)
+- `projekt/src/utils/createTodo.ts` – Pure Funktion: trim, leer-Check, UUID, ISO-Timestamp
+- `projekt/src/utils/createTodo.test.ts` – Unit Tests (5 Tests)
+- `projekt/src/components/TodoInputArea.tsx` – Sticky Eingabebereich mit Input + Button
+- `projekt/src/components/TodoInputArea.css` – DS-Tokens als CSS-Variablen, alle Zustände
+- `projekt/src/components/TodoInputArea.test.tsx` – Integration Tests (8 Tests)
+- `projekt/src/App.tsx` – Root-Komponente mit State, localStorage-Write, minimaler Liste + Empty State
+- `projekt/src/App.css` – App-Layout und minimales Todo-Listen-Styling
+- `projekt/src/test/setup.ts` – Vitest Setup mit @testing-library/jest-dom
+
+### Installierte Dependencies
+- `vitest@^4.1.2`
+- `@testing-library/react@^16.3.2`
+- `@testing-library/user-event@^14.6.1`
+- `@testing-library/jest-dom@^6.9.1`
+- `happy-dom@^20.8.9`
+
+### Offene Punkte / Tech-Debt
+- Minimale Todo-Liste in App.tsx ist ein Platzhalter – wird in FEAT-2 durch vollständige TodoList-Komponente mit Persistenz-Lese-Logik ersetzt
+- DS-Token `color-primary-500` (#3B82F6) auf Button ergibt 3.68:1 Kontrast – pre-existierende DS-Lücke, dokumentiert in UX-Spec. Bei Bedarf: `color-primary-600` als Button-Hintergrund verwenden.
