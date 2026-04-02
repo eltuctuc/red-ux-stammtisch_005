@@ -1,7 +1,7 @@
 # FEAT-2: Todo-Liste & Persistenz
 
 ## Status
-Aktueller Schritt: Dev
+Aktueller Schritt: Done
 
 ## Abhängigkeiten
 - Benötigt: FEAT-1 (Todo anlegen) – ohne Anlegen gibt es nichts anzuzeigen

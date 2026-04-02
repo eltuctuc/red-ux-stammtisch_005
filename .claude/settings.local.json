@@ -8,7 +8,21 @@
       "Bash(npm install:*)",
       "Bash(git branch:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git tag:*)",
+      "Bash(gh repo:*)",
+      "Bash(git push:*)",
+      "Bash(cat:*)",
+      "Bash(git -C /Users/enricoreinsdorf/Projekte/test-projekt log --oneline -5)",
+      "Bash(npm test:*)",
+      "Bash(mv bugs/BUG-FEAT1-QA-001.md bugs/BUG-FEAT1-QA-001-fixed.md)",
+      "Bash(mv bugs/BUG-FEAT1-QA-003.md bugs/BUG-FEAT1-QA-003-fixed.md)",
+      "Bash(npx vitest:*)",
+      "Bash(mv bugs/BUG-FEAT1-UX-002.md bugs/BUG-FEAT1-UX-002-fixed.md)",
+      "Bash(mv bugs/BUG-FEAT1-UX-003.md bugs/BUG-FEAT1-UX-003-fixed.md)",
+      "Bash(mv bugs/BUG-FEAT1-UX-004.md bugs/BUG-FEAT1-UX-004-fixed.md)",
+      "Bash(mv bugs/BUG-FEAT1-UX-006.md bugs/BUG-FEAT1-UX-006-fixed.md)",
+      "Bash(ls:*)"
     ]
   },
   "disabledMcpjsonServers": [

@@ -291,3 +291,53 @@ Geprüft – kein State Machine erforderlich. FEAT-1 hat nur einen relevanten St
 ### Offene Punkte / Tech-Debt
 - Minimale Todo-Liste in App.tsx ist ein Platzhalter – wird in FEAT-2 durch vollständige TodoList-Komponente mit Persistenz-Lese-Logik ersetzt
 - DS-Token `color-primary-500` (#3B82F6) auf Button ergibt 3.68:1 Kontrast – pre-existierende DS-Lücke, dokumentiert in UX-Spec. Bei Bedarf: `color-primary-600` als Button-Hintergrund verwenden.
+
+---
+
+## 5. QA Ergebnisse
+*Ausgefüllt von: /red:proto-qa — 2026-04-02 (Runde 2)*
+
+### Acceptance Criteria Status
+- [x] AC-1: Textfeld ist beim Laden automatisch fokussiert ✅
+- [x] AC-2: Enter + nicht-leerer Inhalt → Todo angelegt, Feld geleert ✅
+- [x] AC-3: Todo erscheint sofort in der Liste ✅
+- [x] AC-4: Nur-Leerzeichen → kein Todo, kein Fehler ✅
+- [x] AC-5: Leere Eingabe + Enter → stilles Ignorieren ✅
+- [x] AC-6: Nach dem Anlegen ist Fokus im Eingabefeld ✅ (inkl. leerem Button-Klick)
+- [x] AC-7: Titel wird getrimmt gespeichert ✅
+- [x] AC-8: maxLength={200} verhindert Übertypen ✅
+
+### Security-Check
+- Kein dangerouslySetInnerHTML – React escaped alles korrekt
+- XSS: kein Risiko
+- localStorage-Handling: korrekt (synchron, JSON.stringify)
+
+### A11y-Check
+- sr-only Label vorhanden ✅
+- aria-label am Button ✅
+- autoFocus korrekt ✅
+- focus-visible Ring am Button ✅
+- Fokus-Rückgabe nach leerem Button-Klick ✅ (gefixt)
+- aria-label auf rollenlosem div (Empty State) ⚠️ → BUG-FEAT1-UX-006
+
+### Gefixte Bugs (Runde 1→2)
+- BUG-FEAT1-QA-001-fixed – Fokus nach leerem Button-Klick ✅
+- BUG-FEAT1-QA-003-fixed – Tests für Fokus-Rückkehr ergänzt ✅
+
+### Offene Bugs
+- BUG-FEAT1-UX-002 – Button-Font-Size hardcodiert und DS-abweichend (Medium)
+- BUG-FEAT1-UX-003 – Input-Focus hat nicht-autorisierten Box-Shadow (Medium)
+- BUG-FEAT1-UX-004 – App.css verwendet hardcodierte Hex-Werte statt DS-Tokens (Medium)
+- BUG-FEAT1-UX-006 – aria-label auf rollenlosem div hat keine Wirkung (Medium) ← neu
+- BUG-FEAT1-QA-002 – Unit-Test prüft ID-Eindeutigkeit bei doppelten Titeln nicht (Low)
+- BUG-FEAT1-UX-005 – Empty-State-Titel als h1 (Low)
+- BUG-FEAT1-UX-007 – Sticky Bar volle Breite vs. 640px Content (Low) ← neu
+
+### Summary
+- ✅ 8/8 Acceptance Criteria passed
+- 15/15 Tests grün
+- 0 Critical, 0 High offen
+- 4 Medium, 3 Low offen (DS-Compliance + A11y-Markup)
+
+### Production-Ready
+✅ Ready – keine Critical oder High Bugs offen (per Definition)
