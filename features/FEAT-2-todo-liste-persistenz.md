@@ -345,3 +345,44 @@ Geprüft – kein State Machine erforderlich. `useTodos`-Hook verwaltet ein flac
 ### Offene Punkte / Tech-Debt
 - `sr-only`-Utility-Klasse ist in TodoInputArea.css definiert – bei Bedarf in globale CSS-Datei auslagern
 - `--font-weight-medium` Token fehlt im DS – EmptyState nutzt Fallback `500`
+
+---
+
+## 5. QA Ergebnisse
+*Ausgefüllt von: /red:proto-qa — 2026-04-02*
+
+### Acceptance Criteria Status
+- [x] Beim Start werden alle localStorage-Todos geladen ✅
+- [x] Nach Browser-Refresh: Todos vorhanden, selbe Reihenfolge ✅
+- [x] Sortierung: neueste Todos oben (createdAt desc) ✅
+- [x] Erledigte Todos visuell unterscheidbar (line-through + color-text-secondary) ✅
+- [x] Leerzustand: erklärende Nachricht sichtbar ✅
+- [x] Leerzustand: Eingabefeld fokussiert ✅
+- [x] Jede Änderung automatisch in localStorage persistiert ✅
+- [x] Liste zeigt Titel und Status jedes Todos ✅
+
+### Security-Check
+✅ Kein dangerouslySetInnerHTML – Titel als React TextContent gerendert. Kein XSS-Risiko.
+
+### A11y-Check
+✅ `<ul aria-label="Todo-Liste">`, `aria-live="polite"` nach initialem Render, `sr-only "(erledigt)"` bei done-Todos, SVG-Icon `aria-hidden="true"`.
+
+### Offene Bugs (Medium+)
+- BUG-FEAT2-QA-001 – index.css Vite-Template interferiert mit DS (High)
+- BUG-FEAT2-QA-002 – sr-only-Klasse nicht global (Medium)
+- BUG-FEAT2-QA-004 – DS-Token-Block nicht global (Medium)
+- BUG-FEAT2-UX-001 – EmptyState.css hardcodierte rem-Werte (Medium)
+- BUG-FEAT2-UX-002 – Token --spacing-section-md nicht definiert (Medium)
+
+### Offene Bugs (Low – zurückgestellt)
+- BUG-FEAT2-QA-003 – Kein Test für identische Timestamps
+- BUG-FEAT2-UX-003 – Token --font-weight-medium fehlt
+
+### Summary
+- ✅ 8/8 Acceptance Criteria passed
+- ✅ 34/34 Tests grün
+- ❌ 5 Bugs Medium+ (alle CSS-Struktur-Issues, keine funktionalen Fehler)
+- ⏸ 2 Bugs Low (zurückgestellt)
+
+### Production-Ready
+❌ NOT Ready – CSS-Fundament-Issues müssen vor Release behoben werden.
