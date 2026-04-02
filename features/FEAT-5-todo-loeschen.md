@@ -357,3 +357,47 @@ Keine neuen Packages.
 ### Offene Punkte / Tech-Debt
 - Danger Button Hover-Farbe (#991B1B) ist kein DS-Token – DS-Lücke aus UX-Spec, DS-Owner-Entscheidung ausstehend
 - `overflow: hidden` auf `.todo-list` könnte theoretisch Fokus-Ring des ×-Buttons clippen – in Tests nicht reproduziert, Prototype-Scope
+
+---
+
+## 5. QA Ergebnisse
+*Ausgefüllt von: /red:proto-qa — 2026-04-03*
+
+### Acceptance Criteria Status
+- [x] AC-1: Jedes Todo hat einen Löschen-Trigger (×-Button) ✅
+- [x] AC-2: Klick auf Trigger → Inline-Bestätigungsschritt (kein Modal) ✅
+- [x] AC-3: Erst nach expliziter Bestätigung wird gelöscht ✅
+- [x] AC-4: Escape / Klick außen → Abbruch, Todo bleibt ✅
+- [x] AC-5: Nach Löschen sofort aus Liste ✅
+- [x] AC-6: Nach Löschen aus localStorage entfernt ✅
+- [x] AC-7: Letztes Todo löschen → Leerzustand korrekt ✅
+- [x] AC-8: Bestätigungsschritt per Tastatur erreichbar ✅
+
+### Security-Check
+- Kein XSS-Risiko: `deleteTodo` verarbeitet nur In-Memory-IDs, kein `dangerouslySetInnerHTML`
+- Kein Race Condition: Reducer-Architektur verhindert Doppel-Löschen
+
+### A11y-Check
+- `aria-label="Todo löschen"` auf ×-Button ✅
+- `role="group"` + `aria-label="Löschen bestätigen"` auf Confirm-Container ✅
+- `aria-live="polite"` SR-Ankündigung vorhanden ✅
+- `disabled` + `aria-disabled` auf ×-Button während Edit-Modus ✅
+- `aria-hidden` auf "Löschen?"-Text – SR sieht Text nicht ❌ → BUG-FEAT5-UX-002
+- Fokus-Tests fehlen ❌ → BUG-FEAT5-QA-002, BUG-FEAT5-QA-003
+
+### Offene Bugs
+- BUG-FEAT5-QA-001 – Fehlender Test: Enter/Space auf ×-Button (Medium)
+- BUG-FEAT5-QA-002 – Fehlender Test: Fokus zurück nach Cancel (Medium)
+- BUG-FEAT5-QA-003 – Fehlende Tests: Fokus nach Löschen (Medium)
+- BUG-FEAT5-QA-004 – Kein Guard Edit+Confirming gleichzeitig (Low)
+- BUG-FEAT5-UX-001 – Status-Toggle fehlt in S-01c (Medium)
+- BUG-FEAT5-UX-002 – "Löschen?"-Text aria-hidden (Medium)
+- BUG-FEAT5-UX-003 – Titel S-01c: text-base statt text-sm (Low)
+
+### Summary
+- ✅ 8/8 Acceptance Criteria passed
+- 0 Critical, 0 High, 5 Medium, 2 Low
+- 111 Tests grün
+
+### Production-Ready
+❌ NOT Ready – 5 Medium offen (3× fehlende Tests, 1× UX-Abweichung S-01c, 1× A11y aria-hidden)
