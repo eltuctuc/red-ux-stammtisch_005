@@ -1,7 +1,7 @@
 # FEAT-2: Todo-Liste & Persistenz
 
 ## Status
-Aktueller Schritt: Spec
+Aktueller Schritt: Tech
 
 ## Abhängigkeiten
 - Benötigt: FEAT-1 (Todo anlegen) – ohne Anlegen gibt es nichts anzuzeigen
@@ -50,3 +50,272 @@ Die App zeigt alle vorhandenen Todos in einer Liste an. Die Liste lädt beim Sta
 - Sync zwischen Browser-Tabs oder Geräten
 - Exportieren oder Importieren der Todo-Liste
 - Pagination oder virtuelles Scrolling
+
+---
+
+## 2. UX Entscheidungen
+*Ausgefüllt von: /red:proto-ux — 2026-04-02*
+
+### Einbettung im Produkt
+Feature lebt auf S-01 / S-01a (URL: `/`) – direkt unterhalb des fixierten Eingabebereichs (FEAT-1).  
+Die Todo-Liste füllt den restlichen Viewport-Bereich und scrollt vertikal wenn mehr Todos vorhanden sind als in den sichtbaren Bereich passen. Kein separater Screen, kein Routing.
+
+Route (neu): – keine –
+
+### Einstiegspunkte
+- App-Start: localStorage wird beim Initialisieren synchron ausgelesen
+- Wenn Daten vorhanden: direkt S-01 (Liste sichtbar)
+- Wenn leer/korrupt/nicht vorhanden: S-01a (Leerzustand)
+- Nach jedem Todo-Anlegen / -Löschen wird die Liste automatisch neu gerendert
+
+### User Flow
+
+```
+App-Start
+    ↓
+localStorage-Read
+    ├─ Leer / korrupt / nicht vorhanden
+    │       → S-01a: Empty State zeigen
+    │         (Eingabefeld fokussiert, erklärende Nachricht darunter)
+    │
+    └─ Todos vorhanden
+            → S-01: Todo-Liste rendern
+              Todos: neueste oben, älteste unten
+              Offene Todos: normaler Text
+              Erledigte Todos: durchgestrichen + abgedunkelter Text
+              Jedes Todo: Platzhalter für Status-Toggle (FEAT-3) +
+                          Titel + Trailing-Bereich für Aktionen (FEAT-4/5)
+```
+
+### Interaktionsmuster
+- **Primärmuster:** Einfache Liste – `<ul>/<li>` Struktur nach data-display.md → "Einfache Liste"
+- **Fehler-Handling:** Korrupte localStorage-Daten → silent fallback auf leere Liste, kein Fehler-Banner (per Spec: kein Blocking)
+- **Leerer Zustand (S-01a):** Empty State nach feedback.md → Icon + Titel + Beschreibung. Kein CTA-Button da Eingabefeld (FEAT-1) bereits fixiert oben sichtbar ist.
+- **Ladeverhalten:** Kein Skeleton, kein Spinner – localStorage-Read ist synchron. Liste erscheint sofort beim Rendern. Keine wahrnehmbare Ladedauer.
+- **Hover-Aktionen:** Trailing-Bereich für FEAT-4/5-Icons – erscheint beim Item-Hover (spart visuellen Noise im Ruhezustand). Platzhalter im DOM vorhanden, Sichtbarkeit über CSS gesteuert.
+
+### Eingesetzte Komponenten
+
+| Komponente             | DS-Status          | Quelle                                              |
+|------------------------|--------------------|-----------------------------------------------------|
+| List (ul/li)           | ⚠ Tokens-Build     | Kein List-Item im DS – nach data-display.md Pattern  |
+| Empty State            | ⚠ Tokens-Build     | Kein Empty-State-Komponent – nach feedback.md Pattern |
+
+**Begründung Tokens-Build:**
+- DS hat `Card (compact)` für Listen, aber Card-Spec schreibt vor "Nicht verwenden wenn: Für Listen-Einträge mit vielen Zeilen → List-Item". Todos sind einzeilig, aber Card per Item ist für ein minimales Todo-App visuell zu schwer (unnötige Borders, Shadows, Paddings).
+- Entscheidung: semantisches `<ul>/<li>` mit DS-Tokens (spacing, colors, typography). Gleicher Look & Feel wie ein `Card (compact)` ohne formale Spec. Genehmigt 2026-04-02.
+
+**Todo List Item Anatomie (Tokens-Build):**
+```
+<li>
+  [Status-Toggle-Bereich]   ← FEAT-3 – Platzhalter 24px breit
+  [Titel]                   ← style-body (text-base), flex-grow: 1
+  [Trailing-Aktionen]       ← FEAT-4/5 – hover-reveal, opacity: 0 → 1
+</li>
+```
+
+- Padding: `spacing-3` oben/unten, `spacing-4` links/rechts (`spacing-component-sm`)
+- Trennlinie: `1px color-border-default` zwischen Items (nicht nach letztem Item)
+- Hintergrund Item: `color-neutral-0` (kein Hover-Tint nötig – Hover zeigt nur Trailing-Aktionen)
+
+**Visuelle Differenzierung offen vs. erledigt:**
+- Offen: `color-text-primary` (#111827), keine `text-decoration`
+- Erledigt: `color-text-secondary` (#4B5563) + `text-decoration: line-through`
+- Begründung Farbwahl: `color-text-disabled` (#9CA3AF) wäre semantisch naheliegend, aber Kontrast nur 2.54:1 – schlechter als WCAG 1.4.11 (3:1 für UI-Komponenten). `color-text-secondary` (#4B5563) ergibt 7.56:1 und kommuniziert "erledigt" dennoch klar durch die Kombination mit line-through. DS-Lücke: kein dedizierter "done"-Token vorhanden.
+
+**Empty State Layout (S-01a):**
+```
+[Icon: Checkmark oder Liste – 40px, color-text-disabled]
+[Titel: "Noch keine Todos."] ← style-body, font-weight-medium, color-text-primary
+[Text: "Einfach oben tippen und Enter drücken."] ← style-body-sm, color-text-secondary
+```
+- Kein CTA-Button (Eingabefeld oben ist bereits der Call-to-Action)
+- Vertikal zentriert im verfügbaren Bereich unterhalb des Eingabebereichs
+- Padding: `spacing-section-md` oben
+
+### Screen Transitions (verbindlich)
+
+FEAT-2 löst selbst keine State Transitions aus – das Feature ist rein display-seitig. Die relevanten Transitions (S-01a ↔ S-01) werden durch Aktionen aus anderen Features getriggert und sind bereits in `flows/product-flows.md` eingetragen:
+
+| Von    | Trigger                       | Wohin  | Bedingung                          | Feature |
+|--------|-------------------------------|--------|------------------------------------|---------|
+| S-01a  | Enter im Input (nicht leer)   | S-01   | Erstes Todo angelegt               | FEAT-1  |
+| S-01c  | "Bestätigen" Löschen          | S-01a  | Letztes Todo gelöscht              | FEAT-5  |
+
+*(Keine neuen Transitions durch FEAT-2)*
+
+### DS-Status dieser Implementierung
+- **Konforme Komponenten:** –
+- **Neue Komponenten (Tokens-Build, genehmigt):** List-Item (ul/li nach data-display.md), Empty State (nach feedback.md)
+- **Bewusste Abweichungen (Hypothesentest):** –
+
+### Barrierefreiheit (A11y)
+
+**Keyboard-Navigation:**
+- Todo-Liste selbst nicht direkt tastatur-navigierbar (keine Links/Buttons in FEAT-2)
+- Status-Toggle, Edit und Delete (FEAT-3/4/5) fügen fokussierbare Elemente hinzu
+- Tab-Reihenfolge in Todo-Items: `[Status-Toggle] → [Trailing-Aktionen]` (FEAT-3/4/5 definieren das)
+
+**Screen Reader:**
+- `<ul aria-label="Todo-Liste">` – semantische Liste mit Label
+- Im Leerzustand: `<p>` Elemente, kein `aria-live` nötig (Zustand ändert sich nicht dynamisch ohne Nutzeraktion)
+- Wenn Liste aktualisiert wird (Todo angelegt): `aria-live="polite"` auf dem Listen-Container empfohlen (sodass SR ankündigt "Todo hinzugefügt"), alternativ Fokusmanagement nach FEAT-1
+
+**Farbkontrast (berechnet):**
+
+| Element | Vordergrund-Token | Hintergrund-Token | Hex fg | Hex bg | Ratio | WCAG |
+|---------|------------------|------------------|--------|--------|-------|------|
+| Todo-Titel (offen) | `color-text-primary` | `color-neutral-0` | #111827 | #FFFFFF | ~18.8:1 | ✅ 4.5:1 |
+| Todo-Titel (erledigt) | `color-text-secondary` | `color-neutral-0` | #4B5563 | #FFFFFF | 7.56:1 | ✅ 4.5:1 |
+| Empty-State-Titel | `color-text-primary` | `color-neutral-0` | #111827 | #FFFFFF | ~18.8:1 | ✅ |
+| Empty-State-Text | `color-text-secondary` | `color-neutral-0` | #4B5563 | #FFFFFF | 7.56:1 | ✅ |
+| Empty-State-Icon | `color-text-disabled` | `color-neutral-0` | #9CA3AF | #FFFFFF | 2.54:1 | ⚠ Icon dekorativ – kein Text, WCAG 1.4.11 für dekorative Icons nicht anwendbar. Icon hat kein `aria-label` (rein visuell). |
+| Trennlinie | `color-border-default` | `color-neutral-0` | #E5E7EB | #FFFFFF | – | Non-text UI – kein Kontrast-Requirement für reine Linien |
+
+> **Hinweis für erledigte Todos:** `color-text-secondary` (#4B5563) statt `color-text-disabled` (#9CA3AF) gewählt – bewusste Abweichung von der "naheliegenden" Disabled-Token-Nutzung zugunsten WCAG-Compliance. Die visuelle "Erledigt"-Kommunikation übernimmt `text-decoration: line-through` als zweiten Kanal.
+
+### Mobile-Verhalten
+- Per PRD out-of-scope
+- Grundverhalten: Liste nimmt volle Breite, scrollt vertikal – funktioniert ohne spezifische Anpassungen
+
+---
+
+## 3. Technisches Design
+*Ausgefüllt von: /red:proto-architect — 2026-04-02*
+
+### Component-Struktur
+
+```
+App (Root – projekt/src/App.tsx)
+├── TodoInputArea  (FEAT-1 – bereits gebaut)
+└── TodoListArea  (projekt/src/components/TodoListArea.tsx)
+    ├── TodoList  (<ul aria-label="Todo-Liste">)  [wenn todos.length > 0]
+    │   └── TodoItem  (wiederholend, projekt/src/components/TodoItem.tsx)
+    │       ├── [Status-Toggle-Platzhalter 24px]  (FEAT-3 – leeres div, kein Interaktion)
+    │       ├── TodoTitle  (<span> mit conditional styling offen/erledigt)
+    │       └── [Trailing-Aktionen-Platzhalter]  (FEAT-4/5 – opacity:0, hover-reveal via CSS)
+    └── EmptyState  (projekt/src/components/EmptyState.tsx)  [wenn todos.length === 0]
+```
+
+Wiederverwendbar aus bestehenden Komponenten:
+- `TodoInputArea` aus FEAT-1 – keine Änderungen nötig
+
+### Daten-Model
+
+Bereits in FEAT-1 definiert, hier verbindlich festgelegt für das Lesen:
+
+Ein Todo-Objekt im localStorage:
+- **id:** string (UUID)
+- **title:** string (getrimmt, 1–200 Zeichen)
+- **createdAt:** string (ISO-8601)
+- **status:** `"open"` oder `"done"`
+
+localStorage Key: `"todos"`, Format: JSON-Array dieser Objekte.
+
+Sortierung in der Liste: nach `createdAt` absteigend (neueste oben). Sortierung passiert beim Lesen/Rendern, nicht beim Speichern.
+
+### API / Daten-Fluss
+
+```
+App mountet
+    ↓
+useTodos-Hook initialisiert → localStorage.getItem("todos")
+    ├─ null / nicht vorhanden → State: [] → EmptyState rendern
+    ├─ ungültiges JSON (SyntaxError) → State: [] → localStorage.removeItem("todos") → EmptyState
+    ├─ kein Array → State: [] → localStorage.removeItem("todos") → EmptyState
+    └─ valides Array → Struktur-Validation jedes Items → State: validierte Todos[]
+           → Sortierung: neueste zuerst → TodoList rendern
+
+State-Mutation (Anlegen/Löschen/Bearbeiten aus anderen Features):
+    → useTodos gibt Mutationsfunktionen zurück (addTodo, deleteTodo etc.)
+    → State-Update → useEffect schreibt neuen State nach localStorage
+```
+
+### Daten-Validation
+
+Quelle: `localStorage` (Key: `"todos"`)
+
+**Risiko:** TypeScript-Types bieten KEINEN Runtime-Schutz. `JSON.parse(raw) as Todo[]` erzeugt keinen Fehler wenn die Struktur falsch ist – crashes entstehen erst beim Rendern.
+
+**Validation-Strategie (in dieser Reihenfolge):**
+1. **Existenz-Check:** `localStorage.getItem("todos") === null` → leeres Array zurückgeben
+2. **JSON-Parse:** in `try/catch` – bei `SyntaxError`: localStorage-Eintrag löschen, leeres Array zurückgeben
+3. **Typ-Check:** `Array.isArray(parsed)` – falls `false`: localStorage löschen, leeres Array
+4. **Struktur-Check pro Item:** `item.id` (string), `item.title` (string), `item.createdAt` (string, ISO-parsebar), `item.status` (`"open"` oder `"done"`) – Items die diesen Check nicht bestehen werden herausgefiltert (kein Hard-Fail für die gesamte Liste)
+5. **Fallback:** Leeres Array. Beim nächsten Schreiben (z.B. neues Todo) wird localStorage mit validen Daten überschrieben.
+6. **Nutzer-Feedback:** Kein Fehler-Banner – per Spec "silent fallback". App startet im Leerzustand.
+
+### Tech-Entscheidungen
+
+- **Custom Hook `useTodos`:** Zentralisiert die gesamte Todo-State-Logik (laden, speichern, CRUD). Alle Komponenten konsumieren nur den Hook – kein direktes localStorage-Zugriff außerhalb des Hooks. Macht Tests isolierbar und FEAT-3/4/5 einfach erweiterbar.
+- **useEffect für localStorage-Sync:** `useEffect(() => { localStorage.setItem("todos", JSON.stringify(todos)) }, [todos])` – reagiert auf State-Änderungen, schreibt synchron. Kein separater "save"-Aufruf nötig.
+- **Sortierung beim Rendern, nicht beim Speichern:** `[...todos].sort(...)` direkt im Render – einfacher, keine gespeicherte Reihenfolge die inkonistent werden kann.
+- **Komponenten-Splitting:** `TodoListArea`, `TodoList`, `TodoItem`, `EmptyState` als separate Dateien – bessere Testbarkeit und klare Verantwortlichkeiten.
+- **Platzhalter-Strategie für FEAT-3/4/5:** DOM-Struktur für Status-Toggle und Trailing-Aktionen jetzt anlegen (leere divs mit CSS-Klassen), aber ohne Funktionalität. Verhindert spätere Layout-Umbrüche wenn FEAT-3/4/5 die Slots befüllen.
+
+### Security-Anforderungen
+
+- **Authentifizierung:** Keine – lokale App.
+- **Autorisierung:** Keine.
+- **Input-Validierung:** Validation beim Lesen aus localStorage (siehe Daten-Validation). Beim Schreiben ist der State bereits durch FEAT-1-Logik bereinigt.
+- **OWASP-relevante Punkte:**
+  - **XSS:** Todo-Titel aus localStorage werden als React-Text-Content gerendert – kein `dangerouslySetInnerHTML`. Kein Risiko auch bei manipulierten localStorage-Daten.
+  - **localStorage-Manipulation:** Nutzers eigene Daten – kein Security-Risiko. Validation schützt vor App-Crashes, nicht vor Security-Angriffen.
+
+### Dependencies
+
+Keine neuen Packages. React (bereits vorhanden) mit `useState` + `useEffect` + `useCallback` reicht.
+
+### A11y-Architektur
+
+| Element | ARIA-Pattern | Entscheidung |
+|---------|-------------|--------------|
+| Listen-Container | `<ul aria-label="Todo-Liste">` | Pflicht – Screen Reader liest "Todo-Liste, X Einträge". Kein `role="list"` nötig (ul ist bereits semantisch) |
+| Todo-Items | `<li>` | Kein zusätzliches ARIA. Inhalt wird durch Screen Reader vorgelesen |
+| Leerer Zustand | `<div>` + `<p>` Elemente | Statischer Text – kein `aria-live` nötig (ändert sich nicht ohne Nutzeraktion) |
+| Live-Region für neue Todos | `aria-live="polite"` auf `<ul>` | SR gibt Feedback wenn neues Todo erscheint (FEAT-1 triggert das). Trigger: nur wenn Item hinzugefügt wird – **nicht** beim initialen Render. Implementierungshinweis: `aria-live` erst NACH initialem Render setzen (z.B. via `useEffect`) oder Liste initial ohne `aria-live` rendern und nach erstem User-Action hinzufügen |
+| Erledigte Todos | `aria-label` oder `aria-describedby` | Nur line-through reicht nicht für SR. Erledigt-Status entweder via `aria-label="[Titel], erledigt"` am li, oder `<span class="sr-only"> (erledigt)</span>` nach dem Titel |
+| Fokus-Management | Kein aktives Fokus-Management in FEAT-2 | FEAT-2 rendert nur – Fokus bleibt nach FEAT-1-Logik im Input |
+
+### Test-Setup
+
+- **Unit Tests (pure Logik):**
+  - `loadTodosFromStorage()`: null → [], SyntaxError → [], kein Array → [], korruptes Item → gefiltert, valide Daten → korrekt
+  - Sortierung: neueste createdAt erscheint zuerst
+- **Integration Tests (React Testing Library):**
+  - App-Render ohne localStorage → EmptyState sichtbar
+  - App-Render mit validen localStorage-Daten → Todos erscheinen in korrekter Reihenfolge
+  - App-Render mit korrupten localStorage-Daten → EmptyState (silent fallback)
+  - Neues Todo anlegen (FEAT-1-Integration) → erscheint in Liste, localStorage aktualisiert
+  - Erledigtes Todo → visuell unterscheidbar (line-through, color-text-secondary)
+- **E2E:**
+  - Vollständiger Flow: App öffnen → Todo eingeben → Enter → Todo in Liste sichtbar → Refresh → Todo noch vorhanden
+
+### Test-Infrastruktur
+
+- **Test-Environment:** `happy-dom` (Vitest Standard). Bekannte Limitierung: `localStorage` in happy-dom ist nicht vollständig zuverlässig – Mock verwenden.
+- **Mocks erforderlich:**
+  - `localStorage` → eigenes In-Memory-Mock in `beforeEach`:
+    ```
+    const localStorageMock = (() => {
+      let store: Record<string, string> = {}
+      return {
+        getItem: (key: string) => store[key] ?? null,
+        setItem: (key: string, value: string) => { store[key] = value },
+        removeItem: (key: string) => { delete store[key] },
+        clear: () => { store = {} }
+      }
+    })()
+    vi.stubGlobal('localStorage', localStorageMock)
+    ```
+  - `Date` → `vi.setSystemTime(...)` für deterministische Sortierungstests
+- **Setup/Teardown:**
+  - `beforeEach`: `localStorage.clear()` (via Mock)
+  - `afterEach`: `vi.restoreAllMocks()`, `vi.useRealTimers()` wenn System-Time gemockt
+- **Bekannte Fallstricke:**
+  - `useEffect` für localStorage-Sync feuert async – `await waitFor(...)` in Tests nötig wenn localStorage-Inhalt nach State-Mutation geprüft wird
+  - `aria-live`-Region: muss nach initialem Render gesetzt werden – Tests die sofort nach `render()` prüfen ob aria-live gesetzt ist werden fehlschlagen
+
+### State-Komplexität
+
+Geprüft – kein State Machine erforderlich. `useTodos`-Hook verwaltet ein flaches Array. Keine verschachtelten State-Transitionen, keine async-Operationen, keine Race Conditions.
