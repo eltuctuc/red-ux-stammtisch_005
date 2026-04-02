@@ -10,7 +10,10 @@
   --color-neutral-0: #ffffff;
   --color-neutral-200: #e5e7eb;
   --color-neutral-400: #9ca3af;
+  --color-neutral-800: #1f2937;
   --color-neutral-900: #111827;
+  --color-error-100: #fee2e2;
+  --color-error-700: #b91c1c;
   --color-bg-page: #f9fafb;
   --color-text-primary: #111827;
   --color-text-secondary: #4b5563;

@@ -58,9 +58,13 @@ export function useTodos() {
     )
   }, [])
 
+  const deleteTodo = useCallback((id: string) => {
+    setTodos((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
   const sortedTodos = [...todos].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
 
-  return { todos: sortedTodos, addTodo, toggleTodo, updateTodo }
+  return { todos: sortedTodos, addTodo, toggleTodo, updateTodo, deleteTodo }
 }

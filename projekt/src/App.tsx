@@ -4,13 +4,13 @@ import { useTodos } from './hooks/useTodos'
 import './App.css'
 
 function App() {
-  const { todos, addTodo, toggleTodo, updateTodo } = useTodos()
+  const { todos, addTodo, toggleTodo, updateTodo, deleteTodo } = useTodos()
 
   return (
     <div id="app">
       <TodoInputArea onAdd={addTodo} />
       <main>
-        <TodoListArea todos={todos} onToggle={toggleTodo} onUpdate={updateTodo} />
+        <TodoListArea todos={todos} onToggle={toggleTodo} onUpdate={updateTodo} onDelete={deleteTodo} />
       </main>
     </div>
   )

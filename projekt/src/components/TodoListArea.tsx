@@ -28,15 +28,40 @@ export function editReducer(state: EditState, action: EditAction): EditState {
   }
 }
 
+// ── Delete Confirm State Machine ─────────────────────────────────────────────
+
+export type DeleteState = { confirmingId: string | null }
+
+export type DeleteAction =
+  | { type: 'DELETE_TRIGGER'; id: string }
+  | { type: 'DELETE_CONFIRM' }
+  | { type: 'DELETE_CANCEL' }
+
+export function deleteReducer(state: DeleteState, action: DeleteAction): DeleteState {
+  switch (action.type) {
+    case 'DELETE_TRIGGER':
+      return { confirmingId: action.id }
+    case 'DELETE_CONFIRM':
+      if (state.confirmingId === null) return state // no-op: Doppel-Klick-Schutz
+      return { confirmingId: null }
+    case 'DELETE_CANCEL':
+      if (state.confirmingId === null) return state // no-op
+      return { confirmingId: null }
+    default:
+      return state
+  }
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 interface TodoListAreaProps {
   todos: Todo[]
   onToggle: (id: string) => void
   onUpdate: (id: string, newTitle: string) => void
+  onDelete: (id: string) => void
 }
 
-export function TodoListArea({ todos, onToggle, onUpdate }: TodoListAreaProps) {
+export function TodoListArea({ todos, onToggle, onUpdate, onDelete }: TodoListAreaProps) {
   // aria-live wird erst nach initialem Render gesetzt,
   // damit SR nicht alle Todos beim ersten Laden vorliest
   const [isInitialized, setIsInitialized] = useState(false)
@@ -44,6 +69,7 @@ export function TodoListArea({ todos, onToggle, onUpdate }: TodoListAreaProps) {
     setIsInitialized(true)
   }, [])
 
+  // ── Edit State ─────────────────────────────────────────────────────────────
   const [editState, dispatch] = useReducer(editReducer, { editingId: null, originalValue: '' })
   const [srStatus, setSrStatus] = useState('')
 
@@ -68,31 +94,94 @@ export function TodoListArea({ todos, onToggle, onUpdate }: TodoListAreaProps) {
     setSrStatus('Bearbeitung abgebrochen')
   }, [])
 
+  // ── Delete State ───────────────────────────────────────────────────────────
+  const [deleteState, deleteDispatch] = useReducer(deleteReducer, { confirmingId: null })
+  const deleteStateRef = useRef(deleteState)
+  deleteStateRef.current = deleteState
+
+  // Refs auf <li>-Elemente für Fokus nach Löschen
+  const todoItemLiRefs = useRef<Map<string, HTMLLIElement | null>>(new Map())
+  const focusTargetAfterDeleteRef = useRef<string | null>(null)
+  const prevTodosLengthRef = useRef(todos.length)
+
+  // Fokus setzen nachdem ein Todo gelöscht wurde (nach Re-Render mit neuer todos-Liste)
+  useEffect(() => {
+    if (
+      focusTargetAfterDeleteRef.current !== null &&
+      todos.length < prevTodosLengthRef.current
+    ) {
+      const target = focusTargetAfterDeleteRef.current
+      if (target === '__input__') {
+        document.getElementById('todo-input')?.focus()
+      } else {
+        todoItemLiRefs.current.get(target)?.focus()
+      }
+      focusTargetAfterDeleteRef.current = null
+    }
+    prevTodosLengthRef.current = todos.length
+  }, [todos])
+
+  const handleDeleteTrigger = useCallback((id: string) => {
+    deleteDispatch({ type: 'DELETE_TRIGGER', id })
+  }, [])
+
+  const handleDeleteConfirm = useCallback(() => {
+    const { confirmingId } = deleteStateRef.current
+    if (!confirmingId) return
+
+    // Fokusziel VOR dem Löschen bestimmen
+    const currentIndex = todos.findIndex((t) => t.id === confirmingId)
+    if (todos.length === 1) {
+      focusTargetAfterDeleteRef.current = '__input__'
+    } else {
+      const nextTodo = todos[currentIndex + 1] ?? todos[currentIndex - 1]
+      focusTargetAfterDeleteRef.current = nextTodo?.id ?? '__input__'
+    }
+
+    onDelete(confirmingId)
+    deleteDispatch({ type: 'DELETE_CONFIRM' })
+  }, [todos, onDelete])
+
+  const handleDeleteCancel = useCallback(() => {
+    deleteDispatch({ type: 'DELETE_CANCEL' })
+  }, [])
+
   if (todos.length === 0) {
     return <EmptyState />
   }
 
+  const isEditingAny = editState.editingId !== null
+
   return (
     <>
-    <div className="sr-only" aria-live="polite" aria-atomic="true">{srStatus}</div>
-    <ul
-      className="todo-list"
-      aria-label="Todo-Liste"
-      aria-live={isInitialized ? 'polite' : undefined}
-      aria-relevant={isInitialized ? 'additions' : undefined}
-    >
-      {todos.map((todo) => (
-        <TodoItem
-          key={todo.id}
-          todo={todo}
-          onToggle={onToggle}
-          isEditing={editState.editingId === todo.id}
-          onDoubleClick={() => handleDoubleClick(todo.id, todo.title)}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        />
-      ))}
-    </ul>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">{srStatus}</div>
+      <ul
+        className="todo-list"
+        aria-label="Todo-Liste"
+        aria-live={isInitialized ? 'polite' : undefined}
+        aria-relevant={isInitialized ? 'additions' : undefined}
+      >
+        {todos.map((todo) => (
+          <TodoItem
+            key={todo.id}
+            todo={todo}
+            onToggle={onToggle}
+            isEditing={editState.editingId === todo.id}
+            onDoubleClick={() => handleDoubleClick(todo.id, todo.title)}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            isConfirming={deleteState.confirmingId === todo.id}
+            onDeleteTrigger={() => handleDeleteTrigger(todo.id)}
+            onDeleteConfirm={handleDeleteConfirm}
+            onDeleteCancel={handleDeleteCancel}
+            isEditingAny={isEditingAny}
+            setLiRef={(el) => {
+              if (el) todoItemLiRefs.current.set(todo.id, el)
+              else todoItemLiRefs.current.delete(todo.id)
+            }}
+          />
+        ))}
+      </ul>
     </>
   )
 }

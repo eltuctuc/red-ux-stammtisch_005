@@ -3,7 +3,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../App'
 import { StatusToggle } from './StatusToggle'
-import { editReducer } from './TodoListArea'
+import { editReducer, deleteReducer } from './TodoListArea'
 import type { Todo } from '../types'
 
 // ── editReducer Unit Tests (QA-002) ──────────────────────────────────────────
@@ -578,6 +578,203 @@ describe('FEAT-4 – Todo bearbeiten (Inline-Editing)', () => {
     await user.keyboard('[Escape]')
     await waitFor(() => {
       expect(screen.getByText(/bearbeitung abgebrochen/i)).toBeInTheDocument()
+    })
+  })
+})
+
+// ── FEAT-5 deleteReducer Unit Tests ──────────────────────────────────────────
+
+describe('deleteReducer – Unit Tests', () => {
+  const idle = { confirmingId: null }
+  const confirming = { confirmingId: 'abc' }
+
+  it('idle + DELETE_TRIGGER → confirming mit korrekter ID', () => {
+    const next = deleteReducer(idle, { type: 'DELETE_TRIGGER', id: 'abc' })
+    expect(next).toEqual({ confirmingId: 'abc' })
+  })
+
+  it('confirming + DELETE_CONFIRM → idle', () => {
+    const next = deleteReducer(confirming, { type: 'DELETE_CONFIRM' })
+    expect(next).toEqual({ confirmingId: null })
+  })
+
+  it('confirming + DELETE_CANCEL → idle', () => {
+    const next = deleteReducer(confirming, { type: 'DELETE_CANCEL' })
+    expect(next).toEqual({ confirmingId: null })
+  })
+
+  it('idle + DELETE_CONFIRM → idle (no-op – Doppel-Klick-Schutz)', () => {
+    const next = deleteReducer(idle, { type: 'DELETE_CONFIRM' })
+    expect(next).toBe(idle) // referenzidentisch
+  })
+
+  it('idle + DELETE_CANCEL → idle (no-op)', () => {
+    const next = deleteReducer(idle, { type: 'DELETE_CANCEL' })
+    expect(next).toBe(idle) // referenzidentisch
+  })
+})
+
+// ── FEAT-5 Integration Tests ──────────────────────────────────────────────────
+
+describe('FEAT-5 – Todo löschen (Inline-Confirm)', () => {
+  it('×-Button ist beim Todo sichtbar (via aria-label)', async () => {
+    const todo = makeTodo({ title: 'Lösch-Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    expect(screen.getByRole('button', { name: 'Todo löschen' })).toBeInTheDocument()
+  })
+
+  it('Klick auf ×-Button zeigt Inline-Bestätigungszeile', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Zu löschen' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    expect(screen.getByRole('group', { name: /löschen bestätigen/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Abbrechen' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Löschen' })).toBeInTheDocument()
+  })
+
+  it('Fokus liegt nach Öffnen auf [Abbrechen] – sicherer Default', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Fokus Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Abbrechen' }))
+    })
+  })
+
+  it('[Abbrechen] schließt Bestätigungszeile ohne Löschen', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Nicht löschen' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await user.click(screen.getByRole('button', { name: 'Abbrechen' }))
+    expect(screen.queryByRole('group', { name: /löschen bestätigen/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Nicht löschen')).toBeInTheDocument()
+  })
+
+  it('Escape schließt Bestätigungszeile ohne Löschen', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Escape Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await user.keyboard('[Escape]')
+    expect(screen.queryByRole('group', { name: /löschen bestätigen/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Escape Test')).toBeInTheDocument()
+  })
+
+  it('Klick außerhalb schließt Bestätigungszeile ohne Löschen', async () => {
+    const todo = makeTodo({ title: 'Klick außen Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const deleteBtn = screen.getByRole('button', { name: 'Todo löschen' })
+    fireEvent.click(deleteBtn)
+    await waitFor(() => {
+      expect(screen.getByRole('group', { name: /löschen bestätigen/i })).toBeInTheDocument()
+    })
+    fireEvent.click(document.body)
+    await waitFor(() => {
+      expect(screen.queryByRole('group', { name: /löschen bestätigen/i })).not.toBeInTheDocument()
+    })
+    expect(screen.getByText('Klick außen Test')).toBeInTheDocument()
+  })
+
+  it('[Löschen] entfernt Todo aus der Liste', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Wirklich löschen' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await user.click(screen.getByRole('button', { name: 'Löschen' }))
+    expect(screen.queryByText('Wirklich löschen')).not.toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: /löschen bestätigen/i })).not.toBeInTheDocument()
+  })
+
+  it('[Löschen] aktualisiert localStorage', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Persistenz Löschen' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await user.click(screen.getByRole('button', { name: 'Löschen' }))
+    await waitFor(() => {
+      const stored = JSON.parse(localStorageMock.getItem('todos') ?? '[]') as Todo[]
+      expect(stored).toHaveLength(0)
+    })
+  })
+
+  it('Letztes Todo löschen → EmptyState erscheint', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Letztes Todo' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await user.click(screen.getByRole('button', { name: 'Löschen' }))
+    expect(screen.getByText(/noch keine todos/i)).toBeInTheDocument()
+  })
+
+  it('×-Button ist disabled während Edit-Modus aktiv ist', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Edit + Delete' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.dblClick(screen.getByText('Edit + Delete'))
+    expect(screen.getByRole('button', { name: 'Todo löschen' })).toBeDisabled()
+  })
+
+  it('Schneller Doppelklick auf [Löschen] → nur einmal gelöscht (no-op Schutz)', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Doppelklick Schutz' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    const loeschenBtn = screen.getByRole('button', { name: 'Löschen' })
+    await user.click(loeschenBtn)
+    // Nach erstem Klick ist State bereits idle → zweiter Klick ist no-op
+    // Todo ist weg, kein doppelter State-Update möglich
+    await waitFor(() => {
+      const stored = JSON.parse(localStorageMock.getItem('todos') ?? '[]') as Todo[]
+      expect(stored).toHaveLength(0)
+    })
+  })
+
+  it('Erledigtes Todo löschen funktioniert identisch', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Erledigtes löschen', status: 'done' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await user.click(screen.getByRole('button', { name: 'Löschen' }))
+    expect(screen.queryByText('Erledigtes löschen')).not.toBeInTheDocument()
+  })
+
+  it('Löschen eines von zwei Todos → verbleibendes Todo bleibt sichtbar', async () => {
+    const user = userEvent.setup()
+    const todoA = makeTodo({ title: 'Todo A', createdAt: '2026-04-01T10:00:00.000Z' })
+    const todoB = makeTodo({ title: 'Todo B', createdAt: '2026-04-01T08:00:00.000Z' })
+    localStorageMock.setItem('todos', JSON.stringify([todoA, todoB]))
+    render(<App />)
+    // Erstes ×-Button klicken (Todo A – das neuere, Index 0)
+    const deleteButtons = screen.getAllByRole('button', { name: 'Todo löschen' })
+    await user.click(deleteButtons[0])
+    await user.click(screen.getByRole('button', { name: 'Löschen' }))
+    expect(screen.queryByText('Todo A')).not.toBeInTheDocument()
+    expect(screen.getByText('Todo B')).toBeInTheDocument()
+  })
+
+  it('SR-Live-Region kündigt Bestätigungsschritt an', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'SR Announce' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Todo löschen' }))
+    await waitFor(() => {
+      expect(screen.getByText('Löschen bestätigen?')).toBeInTheDocument()
     })
   })
 })
