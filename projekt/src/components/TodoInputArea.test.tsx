@@ -88,6 +88,33 @@ describe('TodoInputArea', () => {
     })
   })
 
+  it('Fokus kehrt nach Button-Klick mit leerem Inhalt ins Input zurück', async () => {
+    const user = userEvent.setup()
+    render(<TodoInputArea onAdd={vi.fn()} />)
+    const input = screen.getByRole('textbox', { name: /neues todo/i })
+    const btn = screen.getByRole('button', { name: /todo hinzufügen/i })
+
+    await user.click(btn)
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(input)
+    })
+  })
+
+  it('Fokus kehrt nach Button-Klick mit Leerzeichen-Inhalt ins Input zurück', async () => {
+    const user = userEvent.setup()
+    render(<TodoInputArea onAdd={vi.fn()} />)
+    const input = screen.getByRole('textbox', { name: /neues todo/i })
+    const btn = screen.getByRole('button', { name: /todo hinzufügen/i })
+
+    await user.type(input, '   ')
+    await user.click(btn)
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(input)
+    })
+  })
+
   it('maxLength verhindert Eingabe über 200 Zeichen', () => {
     render(<TodoInputArea onAdd={vi.fn()} />)
     const input = screen.getByRole('textbox', { name: /neues todo/i })

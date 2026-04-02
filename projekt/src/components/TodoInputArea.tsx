@@ -15,6 +15,7 @@ export function TodoInputArea({ onAdd }: TodoInputAreaProps) {
     const todo = createTodo(value)
     if (!todo) {
       setValue('')
+      inputRef.current?.focus()
       return
     }
     onAdd(todo)
