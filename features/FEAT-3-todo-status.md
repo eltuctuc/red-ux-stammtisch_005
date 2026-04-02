@@ -274,3 +274,43 @@ Keine neuen Packages.
 ### Offene Punkte / Tech-Debt
 - `disabled`-Prop in StatusToggle vorbereitet für FEAT-4 (Edit-Modus) – für FEAT-3 immer `false`
 - DS-Gap: Checkbox-Border `color-neutral-400` (#9CA3AF) liegt bei 2.54:1 Kontrast (< WCAG 3:1) – bekannt, genehmigt 2026-04-02, kein passender Token im 3:1-Bereich verfügbar
+
+---
+
+## 5. QA Ergebnisse
+*Ausgefüllt von: /red:proto-qa — 2026-04-03*
+
+### Acceptance Criteria Status
+- [x] Jedes Todo hat ein visuelles Toggle-Element ✅
+- [x] Klick/Tastendruck wechselt Status sofort ✅
+- [x] Erledigte Todos: line-through + reduzierter Kontrast ✅
+- [x] Offene Todos: voller Kontrast, kein Durchstreichen ✅
+- [x] Toggle per Tastatur erreichbar (Tab + Space/Enter) ✅
+- [x] Position bleibt nach Toggle erhalten ✅
+- [x] Status sofort in localStorage persistiert ✅
+- [x] Status nach Browser-Refresh erhalten ✅
+
+### Security-Check
+Kein Risiko. toggleTodo verarbeitet ausschließlich IDs aus In-Memory-State. localStorage-Validierung filtert ungültige Status-Werte korrekt.
+
+### A11y-Check
+3 Bugs gefunden (QA-001, QA-003, QA-005, UX-002) – alle vor Release zu beheben.
+
+### Offene Bugs (zu fixen)
+- BUG-FEAT3-QA-001 – SR-Label statisch, ignoriert aktuellen Status (High)
+- BUG-FEAT3-UX-002 – Doppelte SR-Kommunikation: sr-only "(erledigt)" + Toggle-Label (High)
+- BUG-FEAT3-QA-002 – Kein Test für disabled-Prop (Medium)
+- BUG-FEAT3-QA-003 – aria-live auf ul redundiert SR-Ausgabe bei Toggle (Medium)
+- BUG-FEAT3-QA-005 – pointer-events: none auf Label stört AT im disabled-Zustand (Medium)
+- BUG-FEAT3-UX-003 – Kein Hover-State für checked Toggle (Medium)
+
+### Offene Bugs (Nice-to-have)
+- BUG-FEAT3-UX-004 – line-height hardcoded statt DS-Token (Low)
+- BUG-FEAT3-QA-004 – Fehlende Tests für "alle erledigt" und leere ID (Low)
+
+### Summary
+- ✅ 8/8 Acceptance Criteria passed
+- ❌ 8 Bugs (0 Critical, 2 High, 4 Medium, 2 Low)
+
+### Production-Ready
+❌ NOT Ready – 2 High-Severity A11y-Bugs offen (QA-001, UX-002)
