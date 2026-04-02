@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { loadTodosFromStorage } from './useTodos'
+import { renderHook, act } from '@testing-library/react'
+import { loadTodosFromStorage, useTodos } from './useTodos'
 import type { Todo } from '../types'
 
 const localStorageMock = (() => {
@@ -80,5 +81,55 @@ describe('loadTodosFromStorage', () => {
     const doneTodo = { ...validTodo, status: 'done' as const }
     localStorageMock.setItem('todos', JSON.stringify([doneTodo]))
     expect(loadTodosFromStorage()).toEqual([doneTodo])
+  })
+})
+
+describe('useTodos – toggleTodo', () => {
+  it('wechselt Status von "open" zu "done"', () => {
+    localStorageMock.setItem('todos', JSON.stringify([validTodo]))
+    const { result } = renderHook(() => useTodos())
+    act(() => {
+      result.current.toggleTodo(validTodo.id)
+    })
+    expect(result.current.todos[0].status).toBe('done')
+  })
+
+  it('wechselt Status von "done" zurück zu "open"', () => {
+    const doneTodo = { ...validTodo, status: 'done' as const }
+    localStorageMock.setItem('todos', JSON.stringify([doneTodo]))
+    const { result } = renderHook(() => useTodos())
+    act(() => {
+      result.current.toggleTodo(doneTodo.id)
+    })
+    expect(result.current.todos[0].status).toBe('open')
+  })
+
+  it('Doppel-Toggle landet im Ausgangszustand', () => {
+    localStorageMock.setItem('todos', JSON.stringify([validTodo]))
+    const { result } = renderHook(() => useTodos())
+    act(() => {
+      result.current.toggleTodo(validTodo.id)
+      result.current.toggleTodo(validTodo.id)
+    })
+    expect(result.current.todos[0].status).toBe('open')
+  })
+
+  it('unbekannte ID – kein Fehler, State unverändert', () => {
+    localStorageMock.setItem('todos', JSON.stringify([validTodo]))
+    const { result } = renderHook(() => useTodos())
+    act(() => {
+      result.current.toggleTodo('unbekannte-id')
+    })
+    expect(result.current.todos[0].status).toBe('open')
+  })
+
+  it('persistiert Status in localStorage nach Toggle', async () => {
+    localStorageMock.setItem('todos', JSON.stringify([validTodo]))
+    const { result } = renderHook(() => useTodos())
+    act(() => {
+      result.current.toggleTodo(validTodo.id)
+    })
+    const stored = JSON.parse(localStorageMock.getItem('todos') ?? '[]') as Todo[]
+    expect(stored[0].status).toBe('done')
   })
 })

@@ -139,3 +139,93 @@ describe('TodoListArea – Erledigte Todos', () => {
     expect(item).toHaveClass('todo-item--done')
   })
 })
+
+describe('TodoListArea – Status-Toggle', () => {
+  it('Toggle-Checkbox ist initial nicht angehakt bei offenem Todo', () => {
+    const todo = makeTodo({ title: 'Offenes Todo' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const checkbox = screen.getByRole('checkbox', { name: /offenes todo/i })
+    expect(checkbox).not.toBeChecked()
+  })
+
+  it('Toggle-Checkbox ist angehakt bei erledigtem Todo', () => {
+    const todo = makeTodo({ title: 'Erledigtes Todo', status: 'done' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const checkbox = screen.getByRole('checkbox', { name: /erledigtes todo/i })
+    expect(checkbox).toBeChecked()
+  })
+
+  it('Klick auf Toggle wechselt Status zu erledigt', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Zu erledigen' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const checkbox = screen.getByRole('checkbox', { name: /zu erledigen/i })
+    await user.click(checkbox)
+    expect(checkbox).toBeChecked()
+    expect(screen.getByRole('listitem')).toHaveClass('todo-item--done')
+  })
+
+  it('Klick auf erledigtes Todo setzt Status zurück zu offen', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Schon erledigt', status: 'done' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const checkbox = screen.getByRole('checkbox', { name: /schon erledigt/i })
+    await user.click(checkbox)
+    expect(checkbox).not.toBeChecked()
+    expect(screen.getByRole('listitem')).not.toHaveClass('todo-item--done')
+  })
+
+  it('Enter-Taste auf fokussiertem Toggle wechselt Status', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Keyboard Toggle' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const checkbox = screen.getByRole('checkbox', { name: /keyboard toggle/i })
+    checkbox.focus()
+    await user.keyboard('{Enter}')
+    expect(checkbox).toBeChecked()
+  })
+
+  it('Space-Taste auf fokussiertem Toggle wechselt Status (nativ)', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Space Toggle' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const checkbox = screen.getByRole('checkbox', { name: /space toggle/i })
+    checkbox.focus()
+    await user.keyboard(' ')
+    expect(checkbox).toBeChecked()
+  })
+
+  it('localStorage wird nach Toggle aktualisiert', async () => {
+    const user = userEvent.setup()
+    const todo = makeTodo({ title: 'Persistenz-Test' })
+    localStorageMock.setItem('todos', JSON.stringify([todo]))
+    render(<App />)
+    const checkbox = screen.getByRole('checkbox', { name: /persistenz-test/i })
+    await user.click(checkbox)
+    await waitFor(() => {
+      const stored = JSON.parse(localStorageMock.getItem('todos') ?? '[]') as Todo[]
+      expect(stored[0].status).toBe('done')
+    })
+  })
+
+  it('Todo behält Position nach Status-Toggle (keine Umsortierung)', async () => {
+    const user = userEvent.setup()
+    const older = makeTodo({ title: 'Älteres Todo', createdAt: '2026-04-01T08:00:00.000Z' })
+    const newer = makeTodo({ title: 'Neueres Todo', createdAt: '2026-04-01T10:00:00.000Z' })
+    localStorageMock.setItem('todos', JSON.stringify([older, newer]))
+    render(<App />)
+    const items = screen.getAllByRole('listitem')
+    expect(items[0]).toHaveTextContent('Neueres Todo')
+    const olderCheckbox = screen.getByRole('checkbox', { name: /älteres todo/i })
+    await user.click(olderCheckbox)
+    const itemsAfter = screen.getAllByRole('listitem')
+    expect(itemsAfter[0]).toHaveTextContent('Neueres Todo')
+    expect(itemsAfter[1]).toHaveTextContent('Älteres Todo')
+  })
+})

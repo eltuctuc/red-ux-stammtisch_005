@@ -12,12 +12,6 @@
   border-bottom: none;
 }
 
-/* Status-Toggle-Platzhalter (24px breit – FEAT-3 befüllt diesen Slot) */
-.todo-item__toggle-placeholder {
-  width: 24px;
-  flex-shrink: 0;
-}
-
 .todo-item__title {
   flex: 1;
   font-size: var(--text-base);

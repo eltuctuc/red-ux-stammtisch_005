@@ -1,7 +1,7 @@
 # FEAT-3: Todo-Status (erledigt / offen)
 
 ## Status
-Aktueller Schritt: Tech
+Aktueller Schritt: Dev
 
 ## Abhängigkeiten
 - Benötigt: FEAT-1 (Todo anlegen) – es muss Todos geben die markiert werden können
@@ -251,3 +251,26 @@ Keine neuen Packages.
 ### State-Komplexität
 
 Geprüft – kein State Machine erforderlich. Toggle ist ein einfacher Wechsel eines boolean-äquivalenten Feldes. Kein async, keine Race Conditions (localStorage synchron), kein komplexes Fokus-Management.
+
+---
+
+## 4. Implementierung
+*Ausgefüllt von: /red:proto-dev — 2026-04-03*
+
+### Implementierte Dateien
+- `projekt/src/components/StatusToggle.tsx` – Neue kreisförmige Checkbox-Komponente (native input, DS-Tokens-Build)
+- `projekt/src/components/StatusToggle.css` – Custom Styling via DS-Tokens, 44px Touch-Target via Label-Wrapper
+- `projekt/src/components/TodoItem.tsx` – Toggle-Platzhalter durch StatusToggle ersetzt, onToggle-Prop ergänzt
+- `projekt/src/components/TodoItem.css` – toggle-placeholder Klasse entfernt
+- `projekt/src/components/TodoListArea.tsx` – onToggle-Prop ergänzt und an TodoItem durchgereicht
+- `projekt/src/App.tsx` – toggleTodo aus useTodos destrukturiert und an TodoListArea übergeben
+- `projekt/src/hooks/useTodos.ts` – toggleTodo-Funktion ergänzt, im Hook-Return exportiert
+- `projekt/src/hooks/useTodos.test.ts` – 5 Unit-Tests für toggleTodo (open↔done, Doppel-Toggle, unknown ID, Persistenz)
+- `projekt/src/components/TodoListArea.test.tsx` – 8 Integrationstests für Status-Toggle (Klick, Keyboard Enter/Space, Persistenz, Position)
+
+### Installierte Dependencies
+Keine neuen Packages.
+
+### Offene Punkte / Tech-Debt
+- `disabled`-Prop in StatusToggle vorbereitet für FEAT-4 (Edit-Modus) – für FEAT-3 immer `false`
+- DS-Gap: Checkbox-Border `color-neutral-400` (#9CA3AF) liegt bei 2.54:1 Kontrast (< WCAG 3:1) – bekannt, genehmigt 2026-04-02, kein passender Token im 3:1-Bereich verfügbar

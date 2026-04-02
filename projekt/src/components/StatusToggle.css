@@ -1,0 +1,71 @@
+/* 44×44px Touch-Target via Label-Wrapper */
+.status-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.status-toggle__input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  /* Bewusste Entscheidung: color-neutral-400 (2px Border stärkt Wahrnehmbarkeit) */
+  /* DS-Gap dokumentiert in FEAT-3 UX: kein 3:1 Token verfügbar */
+  border: 2px solid var(--color-neutral-400);
+  background-color: var(--color-neutral-0);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+/* Checked state: filled circle mit Checkmark */
+.status-toggle__input:checked {
+  background-color: var(--color-primary-500);
+  border-color: var(--color-primary-500);
+}
+
+/* Checkmark via ::after */
+.status-toggle__input:checked::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 9px;
+  border: 2px solid var(--color-neutral-0);
+  border-top: none;
+  border-left: none;
+  transform: translate(-50%, -60%) rotate(45deg);
+}
+
+/* Focus-Ring – nur bei Keyboard-Navigation sichtbar */
+.status-toggle__input:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* Disabled state – vorbereitet für FEAT-4 Edit-Modus */
+.status-toggle__input:disabled {
+  background-color: var(--color-bg-muted);
+  border-color: var(--color-neutral-200);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-toggle:has(.status-toggle__input:disabled) {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Hover – dezente Verstärkung des Borders bei offenem Zustand */
+.status-toggle:hover .status-toggle__input:not(:checked):not(:disabled) {
+  border-color: var(--color-neutral-600);
+}
