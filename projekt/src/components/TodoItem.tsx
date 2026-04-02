@@ -60,6 +60,7 @@ export function TodoItem({ todo, onToggle, isEditing, onDoubleClick, onSave, onC
           }}
           tabIndex={0}
           role="button"
+          aria-label={`${todo.title} bearbeiten`}
         >
           {todo.title}
         </span>

@@ -23,7 +23,8 @@
       "Bash(mv bugs/BUG-FEAT1-UX-004.md bugs/BUG-FEAT1-UX-004-fixed.md)",
       "Bash(mv bugs/BUG-FEAT1-UX-006.md bugs/BUG-FEAT1-UX-006-fixed.md)",
       "Bash(ls:*)",
-      "Bash(npm version:*)"
+      "Bash(npm version:*)",
+      "Bash(git -C /Users/enricoreinsdorf/Projekte/test-projekt diff --name-only HEAD~1)"
     ]
   },
   "disabledMcpjsonServers": [
