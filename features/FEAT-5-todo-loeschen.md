@@ -1,7 +1,7 @@
 # FEAT-5: Todo löschen
 
 ## Status
-Aktueller Schritt: Tech
+Aktueller Schritt: Dev
 
 ## Abhängigkeiten
 - Benötigt: FEAT-1 (Todo anlegen) – es muss Todos geben die gelöscht werden können
@@ -334,3 +334,26 @@ Keine neuen Packages.
 - **Bekannte Fallstricke:**
   - `document.addEventListener` in `useEffect` muss im Test aktiv sein – happy-dom unterstützt `document`-Events. `cleanup()` von React Testing Library entfernt Komponenten aber nicht Document-Listener – `afterEach: vi.restoreAllMocks()` und manuelle Cleanup-Funktion aus dem `useEffect` sicherstellen.
   - `capture: true` Listener für Klick-außen: in Tests mit `fireEvent.click(document.body)` triggern (nicht `userEvent` – `userEvent` bubbles anders).
+
+---
+
+## 4. Implementierung
+*Ausgefüllt von: /red:proto-dev — 2026-04-03*
+
+### Implementierte Dateien
+- `projekt/src/hooks/useTodos.ts` – `deleteTodo(id)` hinzugefügt (filtert aus State + localStorage)
+- `projekt/src/App.tsx` – `deleteTodo` an `TodoListArea` als `onDelete` weitergereicht
+- `projekt/src/components/DeleteConfirmInline.tsx` – Neue Komponente: Inline-Bestätigung mit Escape/Klick-außen/Fokus-Management
+- `projekt/src/components/DeleteConfirmInline.css` – DS Button ghost sm + danger sm Styles
+- `projekt/src/components/TodoItem.tsx` – ×-Button (ghost sm), isConfirming-Rendering, Fokus-zurück-nach-Cancel via useEffect
+- `projekt/src/components/TodoItem.css` – Delete-Button-Styles: hover-sichtbar, disabled-Zustand
+- `projekt/src/components/TodoListArea.tsx` – deleteReducer (State Machine), Fokus-nach-Löschen via todoItemLiRefs Map
+- `projekt/src/components/TodoListArea.test.tsx` – 5 deleteReducer-Unit-Tests + 14 Integration-Tests (111 gesamt)
+- `projekt/src/index.css` – DS-Tokens ergänzt: color-neutral-800, color-error-700, color-error-100
+
+### Installierte Dependencies
+- Keine neuen Packages.
+
+### Offene Punkte / Tech-Debt
+- Danger Button Hover-Farbe (#991B1B) ist kein DS-Token – DS-Lücke aus UX-Spec, DS-Owner-Entscheidung ausstehend
+- `overflow: hidden` auf `.todo-list` könnte theoretisch Fokus-Ring des ×-Buttons clippen – in Tests nicht reproduziert, Prototype-Scope
